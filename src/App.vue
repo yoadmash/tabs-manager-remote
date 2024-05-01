@@ -15,7 +15,7 @@ const connections = ref([]);
 const selectedTab = ref(null);
 
 onMounted(() => {
-    conosole.log(import.meta.env.VITE_FIREBASE_CONFIG);
+    console.log(import.meta.env.VITE_FIREBASE_CONFIG);
     firebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG);
     const app = initializeApp(firebaseConfig);
     firebaseDB = getFirestore(app);
