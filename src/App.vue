@@ -78,7 +78,7 @@ const login = async () => {
     <form @submit.prevent="login">
       <v-text-field
         clearable
-        type="input"
+        type="password"
         label="Password"
         v-model="password"
       />
