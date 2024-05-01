@@ -1,69 +1,116 @@
 <script setup>
 import { initializeApp } from "firebase/app";
-import { getFirestore, getDocs, collection } from "firebase/firestore";
+import {
+  getFirestore,
+  getDocs,
+  collection,
+  getDoc,
+  doc,
+} from "firebase/firestore";
 
-import { onMounted, ref } from 'vue';
-import TabSelector from './components/TabSelector.vue';
-import TabInfo from './components/TabInfo.vue';
+import { onMounted, ref } from "vue";
+import TabSelector from "./components/TabSelector.vue";
+import TabInfo from "./components/TabInfo.vue";
 
 let firebaseConfig = null;
 let firebaseDB = null;
 
-
+const authorized = ref(false);
+const password = ref("");
 const docs = ref([]);
 const connections = ref([]);
 const selectedTab = ref(null);
 
 onMounted(() => {
-    firebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG);
-    const app = initializeApp(firebaseConfig);
-    firebaseDB = getFirestore(app);
-    getDocsFromFirebase();
+  authorized.value = Boolean(localStorage.getItem("auth")) || false;
+  firebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG);
+  const app = initializeApp(firebaseConfig);
+  firebaseDB = getFirestore(app);
 });
 
+const verifyPassword = async (typedPassword) => {
+  const currentPassword = await getDoc(doc(firebaseDB, "auth", "password"));
+  return currentPassword.data().value === typedPassword;
+};
+
 const getDocsFromFirebase = async () => {
-    const connections_ids = await getDocs(collection(firebaseDB, 'connections_list'));
-    connections_ids.docs.forEach(async doc => {
-        connections.value.push({
-            title: `${doc.id} - [${doc.data().saved_windows_count} saved windows]`,
-            value: doc.id
-        });
-        const collection_data = await getDocs(collection(firebaseDB, doc.id));
-        const collection_data_obj = {
-            id: doc.id,
-            data: collection_data.docs.map(doc => doc.data())
-        }
-        docs.value.push(collection_data_obj);
+  const connections_ids = await getDocs(
+    collection(firebaseDB, "connections_list")
+  );
+  connections_ids.docs.forEach(async (doc) => {
+    connections.value.push({
+      title: `${doc.id} - [${doc.data().saved_windows_count} saved windows]`,
+      value: doc.id,
     });
-}
+    const collection_data = await getDocs(collection(firebaseDB, doc.id));
+    const collection_data_obj = {
+      id: doc.id,
+      data: collection_data.docs.map((doc) => doc.data()),
+    };
+    docs.value.push(collection_data_obj);
+  });
+};
 
 const selectComplete = (data) => {
-    selectedTab.value = data;
-}
+  selectedTab.value = data;
+};
 
 const selectorsChanges = () => {
-    if(selectedTab.value) {
-        selectedTab.value = null;
-    }
-} 
+  if (selectedTab.value) {
+    selectedTab.value = null;
+  }
+};
 
+const login = async () => {
+  if (password.value.length) {
+    const res = await verifyPassword(password.value);
+    if (res) {
+      authorized.value = true;
+      localStorage.setItem("auth", Number(authorized.value));
+      getDocsFromFirebase();
+    }
+  }
+};
 </script>
 
 <template>
+  <template v-if="!authorized">
+    <form @submit.prevent="login">
+      <v-text-field
+        clearable
+        type="input"
+        label="Password"
+        v-model="password"
+      />
+      <v-btn @click="login" color="success" variant="outlined" block
+        >Connect</v-btn
+      >
+    </form>
+  </template>
+  <template v-else>
     <h2>Tabs Manager - Remote Access</h2>
-    <TabSelector :connections="connections" :docs="docs" @onSelectComplete="selectComplete" @onSelectorsChanges="selectorsChanges"/>
+
+    <TabSelector
+      :connections="connections"
+      :docs="docs"
+      @onSelectComplete="selectComplete"
+      @onSelectorsChanges="selectorsChanges"
+    />
+
     <TabInfo :tab="selectedTab" v-if="selectedTab" />
+  </template>
 </template>
 
 <style>
 body {
-    height: 95vh;
-    display: flex;
-    justify-content: center;
-    /* align-items: center; */
+  margin: 10px;
+  height: 95vh;
+  display: flex;
+  justify-content: center;
+  /* align-items: center; */
 }
 
 #app {
-    width: 95vw;
+  width: 95vw;
 }
 </style>

@@ -2,9 +2,9 @@
   "name": "tabs-manager-remote",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview --host"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@mdi/font": "7.0.96",
