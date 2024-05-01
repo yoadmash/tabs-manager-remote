@@ -1,0 +1,32 @@
+{
+  "short_name": "Tabs Manager",
+  "name": "Tabs Manager - Remote Access",
+  "description": "Access your saved tabs remotly",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "wide.png",
+      "sizes": "607x625",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Preview"
+    },
+    {
+      "src": "wide.png",
+      "sizes": "607x625",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Preview"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
