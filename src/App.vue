@@ -26,6 +26,9 @@ onMounted(() => {
   firebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG);
   const app = initializeApp(firebaseConfig);
   firebaseDB = getFirestore(app);
+  if (authorized.value) {
+    getDocsFromFirebase();
+  }
 });
 
 const verifyPassword = async (typedPassword) => {
@@ -107,10 +110,12 @@ body {
   height: 95vh;
   display: flex;
   justify-content: center;
-  /* align-items: center; */
 }
 
 #app {
-  width: 95vw;
+  width: 75vw;
+  @media only screen and (max-width: 1264px) {
+    width: 95vw;
+  }
 }
 </style>

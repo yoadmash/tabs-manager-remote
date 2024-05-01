@@ -25,9 +25,11 @@ const setGenericIcon = (e) => {
             alt="tab-favicon"
             @error="setGenericIcon($event)"
           />
-          <span :title="tab.title">{{ tab.title }}</span>
         </div>
-        <p :title="tab.url">{{ tab.url }}</p>
+        <div>
+          <p :title="tab.title">{{ tab.title }}</p>
+        </div>
+        <p :title="tab.url">URL: {{ tab.url }}</p>
       </div>
     </v-col>
     <v-col :cols="12">
@@ -42,27 +44,33 @@ const setGenericIcon = (e) => {
 .tab-info {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   gap: 20px;
   border-radius: 10px;
   padding: 10px;
   background-color: rgba(0, 128, 0, 0.1);
 
   div {
+    width: 100%;
+    padding-bottom: 10px;
     display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 10px;
+    border-bottom: 1px solid black;
+    // gap: 10px;
 
     img {
-      width: 16px;
-      height: 16px;
+      width: 20px;
+      height: 20px;
     }
   }
 
   p {
     cursor: default;
-    white-space: nowrap;
+    word-break: break-all;
+    white-space: wrap;
     overflow: hidden;
-    text-overflow: ellipsis;
   }
 }
 </style>

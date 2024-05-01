@@ -82,7 +82,7 @@ const tabCleared = () => {
 
 <template>
   <v-row>
-    <v-col :cols="12" :sm="data_selected.connection ? 8 : 12">
+    <v-col :cols="12" :md="data_selected.connection ? 8 : 12">
       <v-combobox
         clearable
         label="Connection"
@@ -93,7 +93,7 @@ const tabCleared = () => {
         @click:clear="connectionCleared"
       />
     </v-col>
-    <v-col :cols="12" :sm="4">
+    <v-col :cols="12" :md="4">
       <v-combobox
         v-if="data_selected.connection"
         clearable
