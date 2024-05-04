@@ -1,12 +1,6 @@
 <script setup>
 import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  getDocs,
-  collection,
-  getDoc,
-  doc,
-} from "firebase/firestore";
+import { getFirestore, getDocs, collection, getDoc, doc } from "firebase/firestore";
 
 import { onMounted, ref } from "vue";
 import TabSelector from "./components/TabSelector.vue";
@@ -37,9 +31,7 @@ const verifyPassword = async (typedPassword) => {
 };
 
 const getDocsFromFirebase = async () => {
-  const connections_ids = await getDocs(
-    collection(firebaseDB, "connections_list")
-  );
+  const connections_ids = await getDocs(collection(firebaseDB, "connections_list"));
   connections_ids.docs.forEach(async (doc) => {
     connections.value.push({
       title: `${doc.id} - [${doc.data().saved_windows_count} saved windows]`,
@@ -79,15 +71,8 @@ const login = async () => {
 <template>
   <template v-if="!authorized">
     <form @submit.prevent="login">
-      <v-text-field
-        clearable
-        type="password"
-        label="Password"
-        v-model="password"
-      />
-      <v-btn @click="login" color="success" variant="outlined" block
-        >Connect</v-btn
-      >
+      <v-text-field clearable type="password" label="Password" v-model="password" />
+      <v-btn @click="login" color="success" variant="outlined" block>Connect</v-btn>
     </form>
   </template>
   <template v-else>
@@ -114,6 +99,7 @@ body {
 
 #app {
   width: 75vw;
+
   @media only screen and (max-width: 1264px) {
     width: 95vw;
   }

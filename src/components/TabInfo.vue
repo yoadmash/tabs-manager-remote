@@ -6,10 +6,6 @@ const props = defineProps({
   },
 });
 
-const openTab = () => {
-  window.open(props.tab.url, "_blank");
-};
-
 const setGenericIcon = (e) => {
   e.target.src = "/generic_tab.svg";
 };
@@ -20,11 +16,7 @@ const setGenericIcon = (e) => {
     <v-col :cols="12">
       <div class="tab-info">
         <div>
-          <img
-            :src="tab.favIconUrl"
-            alt="tab-favicon"
-            @error="setGenericIcon($event)"
-          />
+          <img :src="tab.favIconUrl" alt="tab-favicon" @error="setGenericIcon($event)" />
         </div>
         <div>
           <p :title="tab.title">{{ tab.title }}</p>
@@ -33,9 +25,9 @@ const setGenericIcon = (e) => {
       </div>
     </v-col>
     <v-col :cols="12">
-      <v-btn block variant="outlined" color="green" :onclick="openTab"
-        >Open tab</v-btn
-      >
+      <a :href="tab.url" target="_blank">
+        <v-btn block variant="outlined" color="green">Open Tab</v-btn>
+      </a>
     </v-col>
   </v-row>
 </template>
@@ -58,7 +50,6 @@ const setGenericIcon = (e) => {
     justify-content: center;
     align-items: center;
     border-bottom: 1px solid black;
-    // gap: 10px;
 
     img {
       width: 20px;
@@ -72,5 +63,9 @@ const setGenericIcon = (e) => {
     white-space: wrap;
     overflow: hidden;
   }
+}
+
+a {
+  text-decoration: none;
 }
 </style>
