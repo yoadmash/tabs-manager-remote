@@ -34,7 +34,7 @@ const getDocsFromFirebase = async () => {
   const connections_ids = await getDocs(collection(firebaseDB, "connections_list"));
   connections_ids.docs.forEach(async (doc) => {
     connections.value.push({
-      title: `${doc.id} - [${doc.data().saved_windows_count} saved windows]`,
+      title: `${doc.data().name} - [${doc.data().saved_windows_count} saved windows]`,
       value: doc.id,
     });
     const collection_data = await getDocs(collection(firebaseDB, doc.id));
