@@ -60,24 +60,32 @@ const login = async () => {
   if (password.value.length) {
     const res = await verifyPassword(password.value);
     if (res) {
+      password.value = "";
       authorized.value = true;
       localStorage.setItem("auth", Number(authorized.value));
       getDocsFromFirebase();
     }
   }
 };
+
+const logout = async () => {
+  authorized.value = false;
+  localStorage.removeItem("auth");
+};
 </script>
 
 <template>
   <template v-if="!authorized">
-    <form @submit.prevent="login">
+    <form @submit.prevent="login" class="login">
       <v-text-field clearable type="password" label="Password" v-model="password" />
-      <v-btn @click="login" color="success" variant="outlined" block>Connect</v-btn>
+      <v-btn @click="login" color="success" variant="outlined" block>Login</v-btn>
     </form>
   </template>
   <template v-else>
-    <h2>Tabs Manager - Remote Access</h2>
-
+    <div class="title">
+      <h3>Tabs Manager - Remote Access</h3>
+      <v-btn @click="logout" color="success" variant="outlined" size="small">Logout</v-btn>
+    </div>
     <TabSelector
       :connections="connections"
       :docs="docs"
@@ -89,19 +97,26 @@ const login = async () => {
   </template>
 </template>
 
-<style>
+<style lang="scss">
 body {
   margin: 10px;
   height: 95vh;
   display: flex;
   justify-content: center;
-}
 
-#app {
-  width: 75vw;
+  #app {
+    width: 75vw;
 
-  @media only screen and (max-width: 1264px) {
-    width: 95vw;
+    @media only screen and (max-width: 1264px) {
+      width: 95vw;
+    }
+
+    .title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
   }
 }
 </style>

@@ -24,8 +24,8 @@ const props = defineProps({
 
 const selectConnection = () => {
   emit("onSelectorsChanges");
-  data_selected.value.window = "";
-  data_selected.value.tab = "";
+  data_selected.value.window = null;
+  data_selected.value.tab = null;
   windows_list.value = computed(() => {
     const docObj = props.docs.find(
       (doc) => doc.id === data_selected.value.connection.value
@@ -44,7 +44,7 @@ const selectConnection = () => {
 
 const selectWindow = () => {
   emit("onSelectorsChanges");
-  data_selected.value.tab = "";
+  data_selected.value.tab = null;
   tabs_list.value = computed(() => {
     const windowObj = windows_list.value.value.find(
       (window) => window.value === data_selected.value.window.value
@@ -63,21 +63,22 @@ const selectComplete = () => {
 };
 
 const connectionCleared = () => {
-  data_selected.value.connection = "";
-  data_selected.value.window = "";
-  data_selected.value.tab = "";
+  data_selected.value.connection = null;
+  data_selected.value.window = null;
+  data_selected.value.tab = null;
   emit("onSelectComplete", data_selected.value.tab);
 };
 
 const windowCleared = () => {
-  data_selected.value.window = "";
-  data_selected.value.tab = "";
+  data_selected.value.window = null;
+  data_selected.value.tab = null;
   emit("onSelectComplete", data_selected.value.tab);
 };
 
 const tabCleared = () => {
-  data_selected.value.tab = "";
+  data_selected.value.tab = null;
 };
+
 </script>
 
 <template>
@@ -91,6 +92,7 @@ const tabCleared = () => {
         :menu-props="{ maxWidth: 100 }"
         @update:model-value="selectConnection"
         @click:clear="connectionCleared"
+        persistent-clear
       />
     </v-col>
     <v-col :cols="12" :md="4">
@@ -103,6 +105,7 @@ const tabCleared = () => {
         v-model="data_selected.window"
         @update:model-value="selectWindow"
         @click:clear="windowCleared"
+        persistent-clear
       />
     </v-col>
     <v-col :cols="12">
@@ -115,6 +118,7 @@ const tabCleared = () => {
         v-model="data_selected.tab"
         @click:clear="tabCleared"
         @update:model-value="selectComplete"
+        persistent-clear
       />
     </v-col>
   </v-row>
