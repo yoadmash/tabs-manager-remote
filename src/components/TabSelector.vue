@@ -7,6 +7,10 @@ const data_selected = ref({
   tab: null,
 });
 
+const connection_input = ref(null);
+const windows_input = ref(null);
+const tabs_input = ref(null);
+
 const windows_list = ref([]);
 const tabs_list = ref([]);
 
@@ -40,6 +44,7 @@ const selectConnection = () => {
     });
     return windows_list_arr;
   });
+  connection_input.value.blur();
 };
 
 const selectWindow = () => {
@@ -55,36 +60,35 @@ const selectWindow = () => {
     });
     return tabs_list_arr;
   });
+  windows_input.value.blur();
 };
 
 const selectComplete = () => {
-  emit("onSelectorsChanges");
   emit("onSelectComplete", data_selected.value.tab);
+  tabs_input.value.blur();
 };
 
 const connectionCleared = () => {
-  data_selected.value.connection = null;
-  data_selected.value.window = null;
-  data_selected.value.tab = null;
-  emit("onSelectComplete", data_selected.value.tab);
+  connection_input.value.blur();
+  emit("onSelectorsChanges");
 };
 
 const windowCleared = () => {
-  data_selected.value.window = null;
-  data_selected.value.tab = null;
-  emit("onSelectComplete", data_selected.value.tab);
+  windows_input.value.blur();
+  emit("onSelectorsChanges");
 };
 
-const tabCleared = () => {
-  data_selected.value.tab = null;
+const tabCleared = (e) => {
+  tabs_input.value.blur();
+  emit("onSelectorsChanges");
 };
-
 </script>
 
 <template>
   <v-row>
     <v-col :cols="12" :md="data_selected.connection ? 8 : 12">
       <v-combobox
+        ref="connection_input"
         clearable
         label="Connection"
         :items="connections"
@@ -98,6 +102,7 @@ const tabCleared = () => {
     <v-col :cols="12" :md="4">
       <v-combobox
         v-if="data_selected.connection"
+        ref="windows_input"
         clearable
         label="Window"
         :items="windows_list.value"
@@ -111,6 +116,7 @@ const tabCleared = () => {
     <v-col :cols="12">
       <v-combobox
         v-if="data_selected.window"
+        ref="tabs_input"
         clearable
         label="Tab"
         :items="tabs_list.value"

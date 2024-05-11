@@ -11,6 +11,7 @@ let firebaseDB = null;
 
 const authorized = ref(false);
 const password = ref("");
+const show_password = ref(false);
 const docs = ref([]);
 const connections = ref([]);
 const selectedTab = ref(null);
@@ -51,9 +52,7 @@ const selectComplete = (data) => {
 };
 
 const selectorsChanges = () => {
-  if (selectedTab.value) {
-    selectedTab.value = null;
-  }
+  selectedTab.value = null;
 };
 
 const login = async () => {
@@ -62,6 +61,7 @@ const login = async () => {
     if (res) {
       password.value = "";
       authorized.value = true;
+      show_password.value = false;
       localStorage.setItem("auth", Number(authorized.value));
       getDocsFromFirebase();
     }
@@ -70,14 +70,25 @@ const login = async () => {
 
 const logout = async () => {
   authorized.value = false;
+  selectedTab.value = null;
   localStorage.removeItem("auth");
 };
+
+const show_hide_password = () => {
+  show_password.value = !show_password.value;
+}
 </script>
 
 <template>
   <template v-if="!authorized">
     <form @submit.prevent="login" class="login">
-      <v-text-field clearable type="password" label="Password" v-model="password" />
+      <v-text-field
+        :type="!show_password ? 'password' : 'text'"
+        label="Password"
+        v-model="password"
+        :appendIcon="!show_password ? 'mdi-eye' : 'mdi-eye-off'"
+        @click:append="show_hide_password"
+      />
       <v-btn @click="login" color="success" variant="outlined" block>Login</v-btn>
     </form>
   </template>
