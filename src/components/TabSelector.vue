@@ -35,16 +35,18 @@ const selectConnection = () => {
       (doc) => doc.id === data_selected.value.connection.value
     );
     const windows_list_arr = [];
-    docObj.data.map((window) => {
+    docObj?.data.map((window) => {
       windows_list_arr.push({
         title: `${window.id} - [${window.tabs.length} tabs]`,
         value: window.id,
         tabs: window.tabs,
       });
     });
+    if (windows_list_arr.length) {
+      connection_input.value.blur();
+    }
     return windows_list_arr;
   });
-  connection_input.value.blur();
 };
 
 const selectWindow = () => {
@@ -55,17 +57,23 @@ const selectWindow = () => {
       (window) => window.value === data_selected.value.window.value
     );
     const tabs_list_arr = [];
-    windowObj.tabs.map((tab) => {
+    windowObj?.tabs.map((tab) => {
       tabs_list_arr.push(tab);
     });
+    if (tabs_list_arr.length) {
+      windows_input.value.blur();
+    }
     return tabs_list_arr;
   });
-  windows_input.value.blur();
 };
 
 const selectComplete = () => {
-  emit("onSelectComplete", data_selected.value.tab);
-  tabs_input.value.blur();
+  if(typeof data_selected.value.tab === 'object') {
+    emit("onSelectComplete", data_selected.value.tab);
+    if(tabs_list.value.value.includes(data_selected.value.tab)) {
+      tabs_input.value.blur();
+    }
+  }
 };
 
 const connectionCleared = () => {
@@ -78,7 +86,7 @@ const windowCleared = () => {
   emit("onSelectorsChanges");
 };
 
-const tabCleared = (e) => {
+const tabCleared = () => {
   tabs_input.value.blur();
   emit("onSelectorsChanges");
 };
@@ -86,7 +94,10 @@ const tabCleared = (e) => {
 
 <template>
   <v-row>
-    <v-col :cols="12" :md="data_selected.connection ? 8 : 12">
+    <v-col
+      :cols="12"
+      :md="data_selected.connection && windows_list.value.length ? 8 : 12"
+    >
       <v-combobox
         ref="connection_input"
         clearable
@@ -101,7 +112,7 @@ const tabCleared = (e) => {
     </v-col>
     <v-col :cols="12" :md="4">
       <v-combobox
-        v-if="data_selected.connection"
+        v-if="data_selected.connection && windows_list.value.length"
         ref="windows_input"
         clearable
         label="Window"
@@ -115,7 +126,7 @@ const tabCleared = (e) => {
     </v-col>
     <v-col :cols="12">
       <v-combobox
-        v-if="data_selected.window"
+        v-if="data_selected.window && tabs_list.value.length"
         ref="tabs_input"
         clearable
         label="Tab"
