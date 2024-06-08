@@ -76,9 +76,9 @@ const setRoleLevel = (auth_level) => {
 const getRoleLevel = () => {
   const secretKey = import.meta.env.VITE_ENCR_SECRET_KEY;
   const simpleCrypto = new SimpleCrypto(secretKey);
-  const decipherText = simpleCrypto.decrypt(localStorage.getItem('auth_level'));
+  const decipherText = simpleCrypto.decrypt(localStorage.getItem("auth_level"));
   return decipherText;
-}
+};
 
 const login = async () => {
   if (password.value.length) {

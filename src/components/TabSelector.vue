@@ -37,7 +37,7 @@ const selectConnection = () => {
     const windows_list_arr = [];
     docObj?.data.map((window) => {
       windows_list_arr.push({
-        title: `${window.id} - [${window.tabs.length} tabs]`,
+        title: `${window.title ? `${window.id}: ${window.title}` : window.id} - [${window.tabs.length} tabs]`,
         value: window.id,
         tabs: window.tabs,
       });
