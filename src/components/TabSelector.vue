@@ -85,7 +85,9 @@ const selectComplete = (input) => {
         tabs_input.value.blur();
       }
     } else {
-      free_search_input.value.blur();
+      if (search_results.value.includes(data_selected.value.tab)) {
+        free_search_input.value.blur();
+      }
     }
   }
 };
@@ -110,28 +112,28 @@ const tabCleared = (input) => {
 };
 
 const freeSearch = () => {
-  if(free_search_input.value.modelValue.length > 0) {
-    search_results.value = all_tabs.value.filter(tab => tab.title.toLowerCase().includes(free_search_input.value.modelValue.toLowerCase()));
+  if (free_search_input.value.modelValue.length > 0) {
+    search_results.value = all_tabs.value.filter((tab) =>
+      tab.title.toLowerCase().includes(free_search_input.value.modelValue.toLowerCase())
+    );
   }
 };
 
-const freeSearchBlur = () => {
-  search_results.value = [];
-}
-
+const freeSearchBlur = (focused) => {
+  if (!data_selected.value.tab && !focused) {
+    search_results.value = [];
+  } else if (focused) {
+    data_selected.value.tab = null;
+    emit("onSelectorsChanges");
+  }
+};
 </script>
 
 <template>
   <v-row>
     <v-col
       :cols="12"
-      :md="
-        data_selected.connection &&
-        windows_list.value.length &&
-        !free_search_input?.modelValue?.length
-          ? 8
-          : 12
-      "
+      :md="data_selected.connection && windows_list.value.length ? 8 : 12"
     >
       <v-combobox
         ref="connection_input"
@@ -148,11 +150,7 @@ const freeSearchBlur = () => {
     <v-col
       :cols="12"
       :md="4"
-      v-if="
-        data_selected.connection &&
-        windows_list.value.length &&
-        !free_search_input?.modelValue?.length
-      "
+      v-if="data_selected.connection && windows_list.value.length"
     >
       <v-combobox
         ref="windows_input"
@@ -181,7 +179,7 @@ const freeSearchBlur = () => {
         persistent-clear
         append-inner-icon="mdi-magnify"
         @click:append-inner="freeSearch"
-        @update:focused="freeSearchBlur"
+        @update:focused="freeSearchBlur($event)"
         @keyup.enter="freeSearch"
       />
     </v-col>
