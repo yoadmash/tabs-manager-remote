@@ -30,6 +30,9 @@ const props = defineProps({
 });
 
 const selectConnection = () => {
+  if (search_results.value.length) {
+    search_results.value = [];
+  }
   emit("onSelectorsChanges");
   data_selected.value.window = null;
   data_selected.value.tab = null;
@@ -61,6 +64,9 @@ const selectConnection = () => {
 
 const selectWindow = () => {
   emit("onSelectorsChanges");
+  if (search_results.value.length) {
+    search_results.value = [];
+  }
   data_selected.value.tab = null;
   tabs_list.value = computed(() => {
     const windowObj = windows_list.value.value.find(
@@ -116,11 +122,12 @@ const freeSearch = () => {
     search_results.value = all_tabs.value.filter((tab) =>
       tab.title.toLowerCase().includes(free_search_input.value.modelValue.toLowerCase())
     );
+    data_selected.value.tab = null;
   }
 };
 
 const freeSearchBlur = (focused) => {
-  if (!data_selected.value.tab && !focused) {
+  if (!data_selected.value.tab) {
     search_results.value = [];
   } else if (focused) {
     data_selected.value.tab = null;
@@ -181,6 +188,7 @@ const freeSearchBlur = (focused) => {
         @click:append-inner="freeSearch"
         @update:focused="freeSearchBlur($event)"
         @keyup.enter="freeSearch"
+        @keyup.esc="freeSearchBlur"
       />
     </v-col>
     <v-col :cols="12" v-if="data_selected.window && tabs_list.value.length">
