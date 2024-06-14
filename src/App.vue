@@ -106,10 +106,6 @@ const logout = async () => {
   localStorage.removeItem("auth");
   localStorage.removeItem("auth_level");
 };
-
-const show_hide_password = () => {
-  show_password.value = !show_password.value;
-};
 </script>
 
 <template>
@@ -119,8 +115,8 @@ const show_hide_password = () => {
         :type="!show_password ? 'password' : 'text'"
         label="Password"
         v-model="password"
-        :appendIcon="!show_password ? 'mdi-eye' : 'mdi-eye-off'"
-        @click:append="show_hide_password"
+        :append-inner-icon="!show_password ? 'mdi-eye' : 'mdi-eye-off'"
+        @click:append-inner="show_password = !show_password"
       />
       <v-btn @click="login" color="success" variant="outlined" block>Login</v-btn>
     </form>

@@ -16,6 +16,9 @@ const windows_list = ref([]);
 const tabs_list = ref([]);
 const all_tabs = ref([]);
 const search_results = ref([]);
+const allow_tab_search = ref(false);
+const allow_window_search = ref(false);
+const allow_connection_search = ref(false);
 
 const emit = defineEmits(["onSelectComplete", "onSelectorsChanges"]);
 const props = defineProps({
@@ -52,11 +55,12 @@ const selectConnection = () => {
       });
     });
 
-    if (windows_list_arr.length) {
-      connection_input.value.blur();
-    }
     return windows_list_arr;
   });
+
+  if (windows_list.value.length) {
+      connection_input.value.blur();
+    }
 
   all_tabs.value = [];
   windows_list.value.value.map((window) => all_tabs.value.push(...window.tabs));
@@ -76,11 +80,12 @@ const selectWindow = () => {
     windowObj?.tabs.map((tab) => {
       tabs_list_arr.push(tab);
     });
-    if (tabs_list_arr.length) {
-      windows_input.value.blur();
-    }
     return tabs_list_arr;
   });
+
+  if(tabs_list.value.length) {
+    windows_input.value.blur();
+  }
 };
 
 const selectComplete = (input) => {
@@ -139,52 +144,91 @@ const freeSearchBlur = (focused) => {
 <template>
   <v-row>
     <v-col
-      :cols="12"
       :md="data_selected.connection && windows_list.value.length ? 8 : 12"
+      :cols="12"
     >
-      <v-combobox
-        ref="connection_input"
+      <v-select
+        v-if="!allow_connection_search"
         clearable
+        persistent-clear
+        return-object
         label="Connection"
-        :items="connections"
+        ref="connection_input"
         v-model="data_selected.connection"
+        :items="connections"
         :menu-props="{ maxWidth: 100 }"
+        append-inner-icon="mdi-magnify"
+        @click:append-inner="allow_connection_search = true"
         @update:model-value="selectConnection"
         @click:clear="connectionCleared"
+      />
+      <v-combobox
+        v-else
+        clearable
         persistent-clear
+        label="Connection"
+        ref="connection_input"
+        v-model="data_selected.connection"
+        :items="connections"
+        :menu-props="{ maxWidth: 100 }"
+        append-inner-icon="mdi-magnify-remove-outline"
+        @click:append-inner="allow_connection_search = false"
+        @update:model-value="selectConnection"
+        @click:clear="connectionCleared"
       />
     </v-col>
     <v-col
+      v-if="data_selected.connection && windows_list.value.length"
       :cols="12"
       :md="4"
-      v-if="data_selected.connection && windows_list.value.length"
     >
-      <v-combobox
-        ref="windows_input"
+      <v-select
+        v-if="!allow_window_search"
         clearable
+        persistent-clear
+        return-object
         label="Window"
+        ref="windows_input"
+        v-model="data_selected.window"
         :items="windows_list.value"
         :menu-props="{ maxWidth: 100 }"
-        v-model="data_selected.window"
+        append-inner-icon="mdi-magnify"
+        @click:append-inner="allow_window_search = true"
         @update:model-value="selectWindow"
         @click:clear="windowCleared"
+      />
+      <v-combobox
+        v-else
+        clearable
         persistent-clear
+        label="Window"
+        ref="windows_input"
+        v-model="data_selected.window"
+        :items="windows_list.value"
+        :menu-props="{ maxWidth: 100 }"
+        append-inner-icon="mdi-magnify-remove-outline"
+        @click:append-inner="allow_window_search = false"
+        @update:model-value="selectWindow"
+        @click:clear="windowCleared"
       />
     </v-col>
-    <v-col :cols="12" v-if="!data_selected.window && data_selected.connection">
+    <v-col
+      v-if="!data_selected.window && data_selected.connection && all_tabs.length"
+      :cols="12"
+    >
       <v-combobox
-        ref="free_search_input"
         clearable
+        persistent-clear
         :label="`Free Search ${
           search_results.length ? `(${search_results.length})` : ''
         }`"
+        ref="free_search_input"
+        v-model="data_selected.tab"
         :items="search_results"
         :menu-props="{ maxWidth: 100 }"
-        v-model="data_selected.tab"
+        append-inner-icon="mdi-magnify"
         @click:clear="tabCleared('free_search_input')"
         @update:model-value="selectComplete"
-        persistent-clear
-        append-inner-icon="mdi-magnify"
         @click:append-inner="freeSearch"
         @update:focused="freeSearchBlur($event)"
         @keyup.enter="freeSearch"
@@ -192,16 +236,34 @@ const freeSearchBlur = (focused) => {
       />
     </v-col>
     <v-col :cols="12" v-if="data_selected.window && tabs_list.value.length">
-      <v-combobox
-        ref="tabs_input"
+      <v-select
+        v-if="!allow_tab_search"
         clearable
+        persistent-clear
+        return-object
         label="Tab"
+        ref="tabs_input"
+        v-model="data_selected.tab"
+        :items="tabs_list.value"
+        :menu-props="{ maxWidth: 100 }"
+        append-inner-icon="mdi-magnify"
+        @click:append-inner="allow_tab_search = true"
+        @click:clear="tabCleared('tabs_input')"
+        @update:model-value="selectComplete('tabs_input')"
+      />
+      <v-combobox
+        v-else
+        clearable
+        persistent-clear
+        label="Tab"
+        ref="tabs_input"
         :items="tabs_list.value"
         :menu-props="{ maxWidth: 100 }"
         v-model="data_selected.tab"
+        append-inner-icon="mdi-magnify-remove-outline"
+        @click:append-inner="allow_tab_search = false"
         @click:clear="tabCleared('tabs_input')"
         @update:model-value="selectComplete('tabs_input')"
-        persistent-clear
       />
     </v-col>
   </v-row>
