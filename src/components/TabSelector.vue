@@ -46,12 +46,14 @@ const selectConnection = () => {
 
     const windows_list_arr = [];
     docObj?.data.map((window) => {
+      const noFreeSlot = window?.tabs?.filter((tab) => tab?.url);
+
       windows_list_arr.push({
         title: `${window.title ? `${window.id}: ${window.title}` : window.id} - [${
-          window.tabs.length
+          noFreeSlot.length
         } tabs]`,
         value: window.id,
-        tabs: window.tabs,
+        tabs: noFreeSlot,
       });
     });
 
@@ -59,8 +61,8 @@ const selectConnection = () => {
   });
 
   if (windows_list.value.length) {
-      connection_input.value.blur();
-    }
+    connection_input.value.blur();
+  }
 
   all_tabs.value = [];
   windows_list.value.value.map((window) => all_tabs.value.push(...window.tabs));
@@ -78,12 +80,14 @@ const selectWindow = () => {
     );
     const tabs_list_arr = [];
     windowObj?.tabs.map((tab) => {
-      tabs_list_arr.push(tab);
+      if (tab?.url) {
+        tabs_list_arr.push(tab);
+      }
     });
     return tabs_list_arr;
   });
 
-  if(tabs_list.value.length) {
+  if (tabs_list.value.length) {
     windows_input.value.blur();
   }
 };

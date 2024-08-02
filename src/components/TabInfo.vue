@@ -16,7 +16,11 @@ const setGenericIcon = (e) => {
     <v-col :cols="12">
       <div class="tab-info">
         <div>
-          <img :src="tab.favIconUrl" alt="tab-favicon" @error="setGenericIcon($event)" />
+          <img
+            :src="tab?.favIconUrl || '/generic_tab.svg'"
+            alt="tab-favicon"
+            @error="setGenericIcon($event)"
+          />
         </div>
         <div>
           <p :title="tab.title">{{ tab.title }}</p>
