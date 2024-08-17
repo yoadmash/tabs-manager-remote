@@ -131,6 +131,7 @@ const freeSearch = () => {
     search_results.value = all_tabs.value.filter((tab) =>
       tab.title.toLowerCase().includes(free_search_input.value.modelValue.toLowerCase())
     );
+    search_results.value.map((tab) => tab.title = `${tab.windowId}: ${tab.title}`)
     data_selected.value.tab = null;
   }
 };
