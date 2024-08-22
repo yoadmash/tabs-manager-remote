@@ -42,7 +42,7 @@ const updateTab = () => {
     }
   }
 
-  console.log(tabData.value)
+  console.log(tabData.value);
 };
 
 const clearError = (focused) => {
@@ -88,6 +88,7 @@ const clearError = (focused) => {
             v-model="tabData.favIconUrl"
           />
           <v-textarea
+            v-if="!tabData.title && !tabData.url && !tabData.favIconUrl"
             clearable
             no-resize
             persistent-hint
@@ -102,8 +103,15 @@ const clearError = (focused) => {
           />
         </v-card-text>
         <v-card-actions>
-          <v-btn text="Close" @click="isActive.value = false" />
+          <v-btn text="Clear fields" @click="tabData = {title: '', url: '', favIconUrl: '', json: ''}" />
           <v-spacer></v-spacer>
+          <v-btn
+            text="Close"
+            @click="
+              tabData = { ...tab };
+              isActive.value = false;
+            "
+          />
           <v-btn text="Save" @click="updateTab" />
         </v-card-actions>
       </v-card>

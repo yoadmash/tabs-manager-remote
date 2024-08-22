@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, watch, ref } from "vue";
 
 const data_selected = ref({
   connection: null,
@@ -33,7 +33,7 @@ const props = defineProps({
   reverse_sort: {
     type: Object,
     required: true,
-  }
+  },
 });
 
 const selectConnection = () => {
@@ -61,7 +61,7 @@ const selectConnection = () => {
       });
     });
 
-    return windows_list_arr;
+    return props.reverse_sort.windows ? windows_list_arr.reverse() : windows_list_arr;
   });
 
   if (windows_list.value.length) {
@@ -88,7 +88,7 @@ const selectWindow = () => {
         tabs_list_arr.push(tab);
       }
     });
-    return tabs_list_arr;
+    return props.reverse_sort.tabs ? tabs_list_arr.reverse() : tabs_list_arr;
   });
 
   if (tabs_list.value.length) {
@@ -135,7 +135,7 @@ const freeSearch = () => {
     search_results.value = all_tabs.value.filter((tab) =>
       tab.title.toLowerCase().includes(free_search_input.value.modelValue.toLowerCase())
     );
-    search_results.value.map((tab) => tab.title = `${tab.windowId}: ${tab.title}`)
+    search_results.value.map((tab) => (tab.title = `${tab.windowId}: ${tab.title}`));
     data_selected.value.tab = null;
   }
 };
@@ -148,6 +148,7 @@ const freeSearchBlur = (focused) => {
     emit("onSelectorsChanges");
   }
 };
+
 </script>
 
 <template>
