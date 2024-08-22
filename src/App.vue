@@ -1,6 +1,13 @@
 <script setup>
 import { initializeApp } from "firebase/app";
-import { getFirestore, getDocs, collection, getDoc, doc } from "firebase/firestore";
+import {
+  getFirestore,
+  getDocs,
+  collection,
+  getDoc,
+  doc,
+  setDoc,
+} from "firebase/firestore";
 import SimpleCrypto from "simple-crypto-js";
 
 import { onMounted, ref } from "vue";
@@ -17,6 +24,10 @@ const show_password = ref(false);
 const docs = ref([]);
 const connections = ref([]);
 const selectedTab = ref(null);
+const reverse_sort = ref({
+  tabs: false,
+  windows: true,
+});
 
 onMounted(() => {
   authorized.value = Boolean(localStorage.getItem("auth")) || false;
@@ -28,6 +39,31 @@ onMounted(() => {
     getDocsFromFirebase();
   }
 });
+
+// const verifyPassword = async (typedPassword) => {
+//   const res = await fetch("http://192.168.1.178:4000/auth");
+//   const data = await res.json();
+//   const password = data.password.value;
+//   return password === typedPassword;
+// };
+
+// const getDocsFromFirebase = async () => {
+//   let res = await fetch("http://192.168.1.178:4000/connections");
+//   const connections_ids = await res.json();
+//   connections_ids.docs.forEach(async (doc) => {
+//     connections.value.push({
+//       title: `${doc.id} - [${doc.saved_windows_count} saved windows]`,
+//       value: doc.id,
+//     });
+//     res = await fetch(`http://192.168.1.178:4000/${doc.id}`);
+//     const collection_data = await res.json();
+//     const collection_data_obj = {
+//       id: doc.id,
+//       data: collection_data.docs,
+//     };
+//     docs.value.push(collection_data_obj);
+//   });
+// };
 
 const verifyPassword = async (typedPassword) => {
   const currentPasswords = await getDoc(doc(firebaseDB, "auth", "passwords"));
@@ -42,6 +78,7 @@ const verifyPassword = async (typedPassword) => {
 
 const getDocsFromFirebase = async () => {
   const connections_ids = await getDocs(collection(firebaseDB, "connections_list"));
+  reverse_sort.value = (await getDoc(doc(firebaseDB, "remote_settings", "reverse_sort"))).data();
   connections_ids.docs.forEach(async (doc) => {
     if (getRoleLevel() === "admin" || !doc.data().hidden) {
       connections.value.push({
@@ -98,6 +135,11 @@ const login = async () => {
   }
 };
 
+const sort = async (type, setting) => {
+  reverse_sort.value[type] = setting;
+  await setDoc(doc(firebaseDB, "remote_settings", "reverse_sort"), reverse_sort.value, { merge: true });
+};
+
 const logout = async () => {
   authorized.value = false;
   auth_level.value = null;
@@ -124,13 +166,53 @@ const logout = async () => {
   <template v-else>
     <div class="title">
       <h3>Tabs Manager - Remote Access</h3>
-      <v-btn @click="logout" color="success" variant="outlined" size="small"
-        >Logout</v-btn
-      >
+      <v-menu transition="slide-y-transition" :close-on-content-click="false">
+        <template v-slot:activator="{ props }">
+          <v-btn color="success" variant="outlined" size="small" v-bind="props"
+            >Options</v-btn
+          >
+        </template>
+        <v-list style="padding: 0">
+          <v-list-item>
+            <v-btn
+              color="black"
+              variant="plain"
+              size="small"
+              slim
+              prepend-icon="mdi-sort-reverse-variant"
+              :text="reverse_sort.tabs ? 'Normal sort tabs' : 'Reverse sort tabs'"
+              @click="sort('tabs', !reverse_sort.tabs)"
+            />
+          </v-list-item>
+          <v-list-item>
+            <v-btn
+              color="black"
+              variant="plain"
+              size="small"
+              slim
+              prepend-icon="mdi-sort-reverse-variant"
+              :text="reverse_sort.windows ? 'Normal sort windows' : 'Reverse sort windows'"
+              @click="sort('windows', !reverse_sort.windows)"
+            />
+          </v-list-item>
+          <v-list-item>
+            <v-btn
+              color="black"
+              variant="plain"
+              size="small"
+              slim
+              prepend-icon="mdi-logout"
+              @click="logout"
+              text="Logout"
+            />
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </div>
     <TabSelector
       :connections="connections"
       :docs="docs"
+      :reverse_sort="reverse_sort"
       @onSelectComplete="selectComplete"
       @onSelectorsChanges="selectorsChanges"
     />

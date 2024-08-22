@@ -1,4 +1,6 @@
 <script setup>
+import EditTab from "./EditTab.vue";
+
 const props = defineProps({
   tab: {
     type: Object,
@@ -28,7 +30,10 @@ const setGenericIcon = (e) => {
         <p :title="tab.url">URL: {{ tab.url }}</p>
       </div>
     </v-col>
-    <v-col :cols="12">
+    <v-col :cols="12" :sm="12" :md="6">
+      <EditTab :tab="tab"/>
+    </v-col>
+    <v-col :cols="12" :sm="12" :md="6">
       <a :href="tab.url" target="_blank">
         <v-btn block variant="outlined" color="green">Open Tab</v-btn>
       </a>

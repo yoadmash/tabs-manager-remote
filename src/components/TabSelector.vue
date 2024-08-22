@@ -30,6 +30,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  reverse_sort: {
+    type: Object,
+    required: true,
+  }
 });
 
 const selectConnection = () => {
