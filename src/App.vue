@@ -8,93 +8,36 @@ import {
   doc,
   setDoc,
 } from "firebase/firestore";
-import SimpleCrypto from "simple-crypto-js";
+import { connectToFirebase, getDataFromFirebase, authenticate } from "./api/firebase.js";
 
 import { onMounted, ref } from "vue";
 import TabSelector from "./components/TabSelector.vue";
 import TabInfo from "./components/TabInfo.vue";
 
-let firebaseConfig = null;
-let firebaseDB = null;
-
 const authorized = ref(false);
-const auth_level = ref("");
 const password = ref("");
 const show_password = ref(false);
 const docs = ref([]);
 const connections = ref([]);
 const selectedTab = ref(null);
-const reverse_sort = ref({
-  tabs: false,
-  windows: false,
-});
+const reverse_sort = ref({});
 
-onMounted(() => {
+onMounted(async () => {
+  if (import.meta.env?.VITE_APP_DEV_MODE !== "true") {
+    connectToFirebase();
+  }
   authorized.value = Boolean(localStorage.getItem("auth")) || false;
-  auth_level.value = localStorage.getItem("auth_level") || null;
-  firebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG);
-  const app = initializeApp(firebaseConfig);
-  firebaseDB = getFirestore(app);
   if (authorized.value) {
-    getDocsFromFirebase();
+    await getData();
   }
 });
 
-const verifyPassword = async (typedPassword) => {
-  const res = await fetch("http://192.168.1.178:4000/auth");
-  const data = await res.json();
-  const password = data.password.value;
-  return password === typedPassword;
+const getData = async (auth_level) => {
+  const firebaseData = await getDataFromFirebase();
+  docs.value = firebaseData?.docs;
+  connections.value = firebaseData?.connections;
+  reverse_sort.value = firebaseData?.remote_settings?.reverse_sort;
 };
-
-const getDocsFromFirebase = async () => {
-  let res = await fetch("http://192.168.1.178:4000/connections");
-  const connections_ids = await res.json();
-  connections_ids.docs.forEach(async (doc) => {
-    connections.value.push({
-      title: `${doc.id} - [${doc.saved_windows_count} saved windows]`,
-      value: doc.id,
-    });
-    res = await fetch(`http://192.168.1.178:4000/${doc.id}`);
-    const collection_data = await res.json();
-    const collection_data_obj = {
-      id: doc.id,
-      data: collection_data.docs,
-    };
-    docs.value.push(collection_data_obj);
-  });
-};
-
-//TODO: add try catch blocks on both functions
-// const verifyPassword = async (typedPassword) => {
-//   const currentPasswords = await getDoc(doc(firebaseDB, "auth", "passwords"));
-//   const auth_level =
-//     typedPassword === currentPasswords.data().admin
-//       ? "admin"
-//       : typedPassword === currentPasswords.data().user
-//       ? "user"
-//       : null;
-//   return auth_level;
-// };
-
-// const getDocsFromFirebase = async () => {
-//   const connections_ids = await getDocs(collection(firebaseDB, "connections_list"));
-//   reverse_sort.value = (await getDoc(doc(firebaseDB, "remote_settings", "reverse_sort"))).data();
-//   connections_ids.docs.forEach(async (doc) => {
-//     if (getRoleLevel() === "admin" || !doc.data().hidden) {
-//       connections.value.push({
-//         title: `${doc.data().name} - [${doc.data().saved_windows_count} saved windows]`,
-//         value: doc.id,
-//       });
-//       const collection_data = await getDocs(collection(firebaseDB, doc.id));
-//       const collection_data_obj = {
-//         id: doc.id,
-//         data: collection_data.docs.map((doc) => doc.data()),
-//       };
-//       docs.value.push(collection_data_obj);
-//     }
-//   });
-// };
 
 const selectComplete = (data) => {
   selectedTab.value = data;
@@ -104,53 +47,32 @@ const selectorsChanges = () => {
   selectedTab.value = null;
 };
 
-const setRoleLevel = (auth_level) => {
-  const secretKey = import.meta.env.VITE_ENCR_SECRET_KEY;
-  const simpleCrypto = new SimpleCrypto(secretKey);
-  const cipherText = simpleCrypto.encrypt(auth_level);
-  localStorage.setItem("auth_level", cipherText);
-};
-
-const getRoleLevel = () => {
-  const secretKey = import.meta.env.VITE_ENCR_SECRET_KEY;
-  const simpleCrypto = new SimpleCrypto(secretKey);
-  const decipherText = simpleCrypto.decrypt(localStorage.getItem("auth_level"));
-  return decipherText;
-};
-
 const login = async () => {
   if (password.value.length) {
-    const res = await verifyPassword(password.value);
+    const res = await authenticate(password.value);
     if (res) {
       password.value = "";
-
-      auth_level.value = res;
-      setRoleLevel(auth_level.value);
-
+      show_password.value = false;
       authorized.value = true;
       localStorage.setItem("auth", Number(authorized.value));
-
-      show_password.value = false;
-      getDocsFromFirebase();
+      await getData();
     }
   }
 };
 
 const sort = async (type, setting) => {
   reverse_sort.value[type] = setting;
-  return;
-  try {
-    await setDoc(doc(firebaseDB, "remote_settings", "reverse_sort"), reverse_sort.value, {
-      merge: true,
-    });
-  } catch (err) {
-    console.log(err);
-  }
+  // try {
+  //   await setDoc(doc(firebaseDB, "remote_settings", "reverse_sort"), reverse_sort.value, {
+  //     merge: true,
+  //   });
+  // } catch (err) {
+  //   console.log(err);
+  // }
 };
 
 const logout = async () => {
   authorized.value = false;
-  auth_level.value = null;
   selectedTab.value = null;
   connections.value = [];
   localStorage.removeItem("auth");
@@ -159,7 +81,7 @@ const logout = async () => {
 </script>
 
 <template>
-  <template v-if="!authorized && !auth_level">
+  <template v-if="!authorized">
     <form @submit.prevent="login" class="login">
       <v-text-field
         :type="!show_password ? 'password' : 'text'"
@@ -176,33 +98,37 @@ const logout = async () => {
       <h3>Tabs Manager - Remote Access</h3>
       <v-menu transition="slide-y-transition">
         <template v-slot:activator="{ props }">
-          <v-btn color="success" variant="outlined" size="small" v-bind="props"
-            >Options</v-btn
-          >
+          <v-btn color="success" variant="outlined" size="small" v-bind="props">
+            Menu
+          </v-btn>
         </template>
         <v-list style="padding: 0">
-          <v-list-item>
+          <v-list-item v-if="reverse_sort && Object.keys(reverse_sort).includes('tabs')">
             <v-btn
               color="black"
               variant="plain"
               size="small"
               slim
-              :prepend-icon="reverse_sort.tabs ? 'mdi-sort-ascending' : 'mdi-sort-descending'"
-              :text="reverse_sort.tabs ? 'Normal tabs list' : 'Reverse tabs list'"
-              @click="sort('tabs', !reverse_sort.tabs)"
+              :prepend-icon="
+                reverse_sort?.tabs ? 'mdi-sort-ascending' : 'mdi-sort-descending'
+              "
+              :text="reverse_sort?.tabs ? 'Normal tabs list' : 'Reverse tabs list'"
+              @click="sort('tabs', !reverse_sort?.tabs)"
             />
           </v-list-item>
-          <v-list-item>
+          <v-list-item v-if="reverse_sort && Object.keys(reverse_sort).includes('windows')">
             <v-btn
               color="black"
               variant="plain"
               size="small"
               slim
-              :prepend-icon="reverse_sort.windows ? 'mdi-sort-ascending' : 'mdi-sort-descending'"
-              :text="
-                reverse_sort.windows ? 'Normal windows list' : 'Reverse windows list'
+              :prepend-icon="
+                reverse_sort?.windows ? 'mdi-sort-ascending' : 'mdi-sort-descending'
               "
-              @click="sort('windows', !reverse_sort.windows)"
+              :text="
+                reverse_sort?.windows ? 'Normal windows list' : 'Reverse windows list'
+              "
+              @click="sort('windows', !reverse_sort?.windows)"
             />
           </v-list-item>
           <v-list-item>
@@ -220,9 +146,10 @@ const logout = async () => {
       </v-menu>
     </div>
     <TabSelector
+      :load="connections.length === 0"
       :connections="connections"
       :docs="docs"
-      :reverse_sort="reverse_sort"
+      :reverse_sort="reverse_sort || {}"
       @onSelectComplete="selectComplete"
       @onSelectorsChanges="selectorsChanges"
     />

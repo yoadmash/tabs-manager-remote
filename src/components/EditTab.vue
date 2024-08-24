@@ -23,7 +23,17 @@ const updateRows = (focused) => {
   textAreaRows.value = focused ? 5 : tabData.value.json ? 5 : 1;
 };
 
-const updateTab = () => {
+const updateTab = async () => {
+  // const tabId = tabData.value.id;
+  // const windowId = tabData.value.windowId;
+
+  // let windowDoc = null;
+  // try {
+  //   windowDoc = await getDoc
+  // } catch (err) {
+
+  // }
+
   if ((!tabData.value.title || !tabData.value.url) && !tabData.value.json) {
     error.value = true;
     return;

@@ -34,6 +34,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  load: {
+    type: Boolean,
+    required: true,
+  }
 });
 
 const selectConnection = () => {
@@ -159,6 +163,8 @@ const freeSearchBlur = (focused) => {
     >
       <v-select
         v-if="!allow_connection_search"
+        :loading="load"
+        :disabled="load"
         clearable
         persistent-clear
         return-object
@@ -174,6 +180,8 @@ const freeSearchBlur = (focused) => {
       />
       <v-combobox
         v-else
+        :loading="load"
+        :disabled="load"
         clearable
         persistent-clear
         label="Connection"
