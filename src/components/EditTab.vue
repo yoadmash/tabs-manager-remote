@@ -1,9 +1,15 @@
 <script setup>
 import { ref } from "vue";
+import { editTab } from "./../api/firebase.js";
 
+const emit = defineEmits(["onTabEdit"]);
 const props = defineProps({
   tab: {
     type: Object,
+    required: true,
+  },
+  connection: {
+    type: String,
     required: true,
   },
 });
@@ -15,8 +21,12 @@ const example = {
 };
 
 const error = ref(false);
-const validJSON = ref(true);
+const validJSON = ref({
+  valid: true,
+  invalidMessage: "",
+});
 const textAreaRows = ref(1);
+const editComplete = ref(false);
 const tabData = ref({ ...props.tab, json: "" });
 
 const updateRows = (focused) => {
@@ -24,15 +34,8 @@ const updateRows = (focused) => {
 };
 
 const updateTab = async () => {
-  // const tabId = tabData.value.id;
-  // const windowId = tabData.value.windowId;
-
-  // let windowDoc = null;
-  // try {
-  //   windowDoc = await getDoc
-  // } catch (err) {
-
-  // }
+  const tabId = tabData.value.id;
+  const windowId = tabData.value.windowId;
 
   if ((!tabData.value.title || !tabData.value.url) && !tabData.value.json) {
     error.value = true;
@@ -40,31 +43,53 @@ const updateTab = async () => {
   }
 
   if (tabData.value.json) {
+    const validKeys = ["title", "url", "favIconUrl"];
     try {
-      if (JSON.parse(tabData.value.json)) {
-        tabData.value = JSON.parse(tabData.value.json);
+      const parsedJSON = JSON.parse(tabData.value.json);
+      for (const key in parsedJSON) {
+        if (!validKeys.includes(key)) {
+          throw new Error(`Valid keys only: ${[...validKeys]}`);
+        }
       }
+
+      tabData.value = parsedJSON;
     } catch (err) {
-      console.log(err);
+      console.error(err.message);
       error.value = true;
-      validJSON.value = false;
+      validJSON.value = {
+        valid: false,
+        invalidMessage: err.message,
+      };
       return;
     }
   }
 
-  console.log(tabData.value);
+  const data = {
+    ...props.tab,
+    title: tabData.value.title,
+    url: tabData.value.url,
+    favIconUrl: tabData.value.favIconUrl || "",
+  };
+
+  editComplete.value = await editTab(tabId, windowId, props.connection, data);
+  if (!editComplete.value) {
+    emit("onTabEdit", data);
+  }
 };
 
 const clearError = (focused) => {
   if (focused) {
     error.value = false;
-    validJSON.value = true;
+    validJSON.value = {
+      valid: true,
+      invalidMessage: "",
+    };
   }
 };
 </script>
 
 <template>
-  <v-dialog max-width="500">
+  <v-dialog max-width="500" persistent v-model="editComplete">
     <template v-slot:activator="{ props: activatorProps }">
       <v-btn block variant="outlined" color="green" v-bind="activatorProps"
         >Edit Tab</v-btn
@@ -76,6 +101,7 @@ const clearError = (focused) => {
         <v-card-subtitle>ID: {{ tab.id }}</v-card-subtitle>
         <v-card-text>
           <v-text-field
+            v-if="!tabData.json"
             clearable
             label="Title"
             variant="outlined"
@@ -84,6 +110,7 @@ const clearError = (focused) => {
             @update:focused="clearError($event)"
           />
           <v-text-field
+            v-if="!tabData.json"
             clearable
             label="URL"
             variant="outlined"
@@ -92,6 +119,7 @@ const clearError = (focused) => {
             @update:focused="clearError($event)"
           />
           <v-text-field
+            v-if="!tabData.json"
             clearable
             label="FavIconUrl"
             variant="outlined"
@@ -104,8 +132,12 @@ const clearError = (focused) => {
             persistent-hint
             label="Tab JSON"
             variant="outlined"
-            :error="error && !validJSON"
-            :hint="validJSON ? 'Required if Title and URL are empty' : 'Invalid JSON'"
+            :error="error && !validJSON.valid"
+            :hint="
+              validJSON.valid
+                ? 'Required if Title and URL are empty'
+                : validJSON.invalidMessage
+            "
             :rows="textAreaRows"
             :placeholder="JSON.stringify(example, null, 2)"
             v-model="tabData.json"
@@ -113,7 +145,10 @@ const clearError = (focused) => {
           />
         </v-card-text>
         <v-card-actions>
-          <v-btn text="Clear fields" @click="tabData = {title: '', url: '', favIconUrl: '', json: ''}" />
+          <v-btn
+            text="Clear fields"
+            @click="tabData = { title: '', url: '', favIconUrl: '', json: '' }"
+          />
           <v-spacer></v-spacer>
           <v-btn
             text="Close"

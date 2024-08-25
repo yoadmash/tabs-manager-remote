@@ -1,10 +1,14 @@
 import { initializeApp } from "firebase/app";
-import { collection, doc, getDoc, getDocs, getFirestore } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc, getFirestore } from "firebase/firestore";
 import SimpleCrypto from "simple-crypto-js";
 
 let firebaseDB = null;
-const secretKey = import.meta.env.VITE_ENCR_SECRET_KEY;
-const simpleCrypto = new SimpleCrypto(secretKey);
+
+const ENCR_SECRET_KEY = import.meta.env.VITE_ENCR_SECRET_KEY;
+const DEV_MODE = import.meta.env?.VITE_APP_DEV_MODE === 'true';
+const DEV_MODE_SERVER_IP = import.meta.env?.VITE_APP_DEV_MODE_SERVER_IP;
+
+const simpleCrypto = new SimpleCrypto(ENCR_SECRET_KEY);
 
 export const connectToFirebase = () => {
     const firebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG);
@@ -15,9 +19,6 @@ export const connectToFirebase = () => {
 }
 
 export const getDataFromFirebase = async () => {
-    const DEV_MODE = import.meta.env?.VITE_APP_DEV_MODE === 'true';
-    const DEV_MODE_SERVER_IP = import.meta.env?.VITE_APP_DEV_MODE_SERVER_IP;
-
     const connections_ids =
         DEV_MODE
             ? await (await fetch(`${DEV_MODE_SERVER_IP}/connections`)).json()
@@ -70,8 +71,39 @@ export const getDataFromFirebase = async () => {
     })
 };
 
+export const sort = async (reverse_sort_obj, sort_type, new_setting) => {
+    reverse_sort_obj[sort_type] = new_setting;
+    try {
+        await setDoc(doc(firebaseDB, "remote_settings", "reverse_sort"), reverse_sort_obj, {
+            merge: true,
+        });
+    } catch (err) {
+        console.log(err);
+    }
+};
+
+export const editTab = async (tabId, windowId, connection, data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // const windowDocRef = doc(firebaseDB, connection, String(windowId));
+            // const window = (await getDoc(windowDocRef)).data();
+            // const tabToEditIndex = window?.tabs?.findIndex(tab => tab.id === tabId);
+            // let tabToEdit = window?.tabs?.find(tab => tab.id === tabId);
+            // tabToEdit = { ...data }
+
+            // window.tabs[tabToEditIndex] = tabToEdit;
+
+            // await setDoc(windowDocRef, window);
+            resolve(false)
+
+        } catch (err) {
+            console.log(err);
+            resolve(true);
+        }
+    })
+}
+
 export const authenticate = async (typedPassword) => {
-    const DEV_MODE = import.meta.env?.VITE_APP_DEV_MODE === 'true'
     if (!DEV_MODE) {
         const currentPasswords = await getDoc(doc(firebaseDB, "auth", "passwords"));
         const auth_level =

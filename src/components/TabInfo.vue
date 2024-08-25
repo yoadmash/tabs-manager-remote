@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from "vue";
 import EditTab from "./EditTab.vue";
 
 const props = defineProps({
@@ -6,7 +7,17 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  connection: {
+    type: String,
+    required: true,
+  },
 });
+
+const tab = ref(props.tab);
+
+const updateTab = (data) => {
+  tab.value = data;
+};
 
 const setGenericIcon = (e) => {
   e.target.src = "/generic_tab.svg";
@@ -31,7 +42,7 @@ const setGenericIcon = (e) => {
       </div>
     </v-col>
     <v-col :cols="12" :sm="12" :md="6">
-      <EditTab :tab="tab"/>
+      <EditTab :tab="tab" :connection="connection" @onTabEdit="updateTab" />
     </v-col>
     <v-col :cols="12" :sm="12" :md="6">
       <a :href="tab.url" target="_blank">

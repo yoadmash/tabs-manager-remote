@@ -102,7 +102,7 @@ const selectWindow = () => {
 
 const selectComplete = (input) => {
   if (typeof data_selected.value.tab === "object") {
-    emit("onSelectComplete", data_selected.value.tab);
+    emit("onSelectComplete", {tab: data_selected.value.tab, connection: data_selected.value.connection.value});
     if (input === "tabs_input") {
       if (tabs_list.value.value.includes(data_selected.value.tab)) {
         tabs_input.value.blur();

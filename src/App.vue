@@ -8,7 +8,7 @@ import {
   doc,
   setDoc,
 } from "firebase/firestore";
-import { connectToFirebase, getDataFromFirebase, authenticate } from "./api/firebase.js";
+import { connectToFirebase, getDataFromFirebase, sort, authenticate } from "./api/firebase.js";
 
 import { onMounted, ref } from "vue";
 import TabSelector from "./components/TabSelector.vue";
@@ -20,6 +20,7 @@ const show_password = ref(false);
 const docs = ref([]);
 const connections = ref([]);
 const selectedTab = ref(null);
+const connection = ref('');
 const reverse_sort = ref({});
 
 onMounted(async () => {
@@ -40,7 +41,8 @@ const getData = async (auth_level) => {
 };
 
 const selectComplete = (data) => {
-  selectedTab.value = data;
+  selectedTab.value = data.tab;
+  connection.value = data.connection
 };
 
 const selectorsChanges = () => {
@@ -60,17 +62,6 @@ const login = async () => {
   }
 };
 
-const sort = async (type, setting) => {
-  reverse_sort.value[type] = setting;
-  // try {
-  //   await setDoc(doc(firebaseDB, "remote_settings", "reverse_sort"), reverse_sort.value, {
-  //     merge: true,
-  //   });
-  // } catch (err) {
-  //   console.log(err);
-  // }
-};
-
 const logout = async () => {
   authorized.value = false;
   selectedTab.value = null;
@@ -84,9 +75,9 @@ const logout = async () => {
   <template v-if="!authorized">
     <form @submit.prevent="login" class="login">
       <v-text-field
-        :type="!show_password ? 'password' : 'text'"
         label="Password"
         v-model="password"
+        :type="!show_password ? 'password' : 'text'"
         :append-inner-icon="!show_password ? 'mdi-eye' : 'mdi-eye-off'"
         @click:append-inner="show_password = !show_password"
       />
@@ -113,7 +104,7 @@ const logout = async () => {
                 reverse_sort?.tabs ? 'mdi-sort-ascending' : 'mdi-sort-descending'
               "
               :text="reverse_sort?.tabs ? 'Normal tabs list' : 'Reverse tabs list'"
-              @click="sort('tabs', !reverse_sort?.tabs)"
+              @click="sort(reverse_sort, 'tabs', !reverse_sort?.tabs)"
             />
           </v-list-item>
           <v-list-item v-if="reverse_sort && Object.keys(reverse_sort).includes('windows')">
@@ -128,7 +119,7 @@ const logout = async () => {
               :text="
                 reverse_sort?.windows ? 'Normal windows list' : 'Reverse windows list'
               "
-              @click="sort('windows', !reverse_sort?.windows)"
+              @click="sort(reverse_sort, 'windows', !reverse_sort?.windows)"
             />
           </v-list-item>
           <v-list-item>
@@ -154,7 +145,7 @@ const logout = async () => {
       @onSelectorsChanges="selectorsChanges"
     />
 
-    <TabInfo :tab="selectedTab" v-if="selectedTab" />
+    <TabInfo :tab="selectedTab" :connection="String(connection)" v-if="selectedTab" />
   </template>
 </template>
 
