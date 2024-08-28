@@ -1,5 +1,25 @@
 <script setup>
-import { computed, watch, ref } from "vue";
+import { computed, ref } from "vue";
+
+const emit = defineEmits(["onSelectComplete", "onSelectorsChanges"]);
+const props = defineProps({
+  connections: {
+    type: Array,
+    required: true,
+  },
+  docs: {
+    type: Array,
+    required: true,
+  },
+  reverse_sort: {
+    type: Object,
+    required: true,
+  },
+  load: {
+    type: Boolean,
+    required: true,
+  },
+});
 
 const data_selected = ref({
   connection: null,
@@ -19,26 +39,6 @@ const search_results = ref([]);
 const allow_tab_search = ref(false);
 const allow_window_search = ref(false);
 const allow_connection_search = ref(false);
-
-const emit = defineEmits(["onSelectComplete", "onSelectorsChanges"]);
-const props = defineProps({
-  connections: {
-    type: Array,
-    required: true,
-  },
-  docs: {
-    type: Array,
-    required: true,
-  },
-  reverse_sort: {
-    type: Object,
-    required: true,
-  },
-  load: {
-    type: Boolean,
-    required: true,
-  }
-});
 
 const selectConnection = () => {
   if (search_results.value.length) {
@@ -102,7 +102,10 @@ const selectWindow = () => {
 
 const selectComplete = (input) => {
   if (typeof data_selected.value.tab === "object") {
-    emit("onSelectComplete", {tab: data_selected.value.tab, connection: data_selected.value.connection.value});
+    emit("onSelectComplete", {
+      tab: data_selected.value.tab,
+      connection: data_selected.value.connection.value,
+    });
     if (input === "tabs_input") {
       if (tabs_list.value.value.includes(data_selected.value.tab)) {
         tabs_input.value.blur();
@@ -152,7 +155,6 @@ const freeSearchBlur = (focused) => {
     emit("onSelectorsChanges");
   }
 };
-
 </script>
 
 <template>

@@ -82,23 +82,23 @@ export const sort = async (reverse_sort_obj, sort_type, new_setting) => {
     }
 };
 
-export const editTab = async (tabId, windowId, connection, data) => {
+export const editTab = async (connection, data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            // const windowDocRef = doc(firebaseDB, connection, String(windowId));
-            // const window = (await getDoc(windowDocRef)).data();
-            // const tabToEditIndex = window?.tabs?.findIndex(tab => tab.id === tabId);
-            // let tabToEdit = window?.tabs?.find(tab => tab.id === tabId);
-            // tabToEdit = { ...data }
+            const windowDocRef = doc(firebaseDB, connection, String(data.windowId));
+            const window = (await getDoc(windowDocRef)).data();
+            const tabToEditIndex = window?.tabs?.findIndex(tab => tab.id === data.id);
+            let tabToEdit = window?.tabs?.find(tab => tab.id === data.id);
+            tabToEdit = { ...data }
 
-            // window.tabs[tabToEditIndex] = tabToEdit;
+            window.tabs[tabToEditIndex] = tabToEdit;
 
-            // await setDoc(windowDocRef, window);
-            resolve(false)
+            await setDoc(windowDocRef, window);
+            resolve(true);
 
         } catch (err) {
             console.log(err);
-            resolve(true);
+            reject(err.message);
         }
     })
 }

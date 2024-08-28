@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import { editTab } from "./../api/firebase.js";
 
-const emit = defineEmits(["onTabEdit"]);
+const emit = defineEmits(["onTabEditComplete"]);
 const props = defineProps({
   tab: {
     type: Object,
@@ -14,12 +14,6 @@ const props = defineProps({
   },
 });
 
-const example = {
-  title: " ",
-  favIconUrl: " ",
-  url: " ",
-};
-
 const error = ref(false);
 const validJSON = ref({
   valid: true,
@@ -29,14 +23,17 @@ const textAreaRows = ref(1);
 const editComplete = ref(false);
 const tabData = ref({ ...props.tab, json: "" });
 
+const example = {
+  title: " ",
+  favIconUrl: " ",
+  url: " ",
+};
+
 const updateRows = (focused) => {
   textAreaRows.value = focused ? 5 : tabData.value.json ? 5 : 1;
 };
 
 const updateTab = async () => {
-  const tabId = tabData.value.id;
-  const windowId = tabData.value.windowId;
-
   if ((!tabData.value.title || !tabData.value.url) && !tabData.value.json) {
     error.value = true;
     return;
@@ -70,10 +67,16 @@ const updateTab = async () => {
     url: tabData.value.url,
     favIconUrl: tabData.value.favIconUrl || "",
   };
-
-  editComplete.value = await editTab(tabId, windowId, props.connection, data);
-  if (!editComplete.value) {
-    emit("onTabEdit", data);
+  
+  try {
+    const success = await editTab(props.connection, data);
+    if (success) {
+      editComplete.value = false;
+      tabData.value = data;
+      emit("onTabEditComplete", data);
+    }
+  } catch (err) {
+    console.error(err);
   }
 };
 

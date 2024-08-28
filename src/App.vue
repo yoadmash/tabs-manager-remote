@@ -1,14 +1,10 @@
 <script setup>
-import { initializeApp } from "firebase/app";
 import {
-  getFirestore,
-  getDocs,
-  collection,
-  getDoc,
-  doc,
-  setDoc,
-} from "firebase/firestore";
-import { connectToFirebase, getDataFromFirebase, sort, authenticate } from "./api/firebase.js";
+  connectToFirebase,
+  getDataFromFirebase,
+  sort,
+  authenticate,
+} from "./api/firebase.js";
 
 import { onMounted, ref } from "vue";
 import TabSelector from "./components/TabSelector.vue";
@@ -20,7 +16,7 @@ const show_password = ref(false);
 const docs = ref([]);
 const connections = ref([]);
 const selectedTab = ref(null);
-const connection = ref('');
+const connection = ref("");
 const reverse_sort = ref({});
 
 onMounted(async () => {
@@ -33,7 +29,7 @@ onMounted(async () => {
   }
 });
 
-const getData = async (auth_level) => {
+const getData = async () => {
   const firebaseData = await getDataFromFirebase();
   docs.value = firebaseData?.docs;
   connections.value = firebaseData?.connections;
@@ -42,7 +38,7 @@ const getData = async (auth_level) => {
 
 const selectComplete = (data) => {
   selectedTab.value = data.tab;
-  connection.value = data.connection
+  connection.value = data.connection;
 };
 
 const selectorsChanges = () => {
@@ -107,7 +103,9 @@ const logout = async () => {
               @click="sort(reverse_sort, 'tabs', !reverse_sort?.tabs)"
             />
           </v-list-item>
-          <v-list-item v-if="reverse_sort && Object.keys(reverse_sort).includes('windows')">
+          <v-list-item
+            v-if="reverse_sort && Object.keys(reverse_sort).includes('windows')"
+          >
             <v-btn
               color="black"
               variant="plain"
@@ -145,7 +143,11 @@ const logout = async () => {
       @onSelectorsChanges="selectorsChanges"
     />
 
-    <TabInfo :tab="selectedTab" :connection="String(connection)" v-if="selectedTab" />
+    <TabInfo
+      v-if="selectedTab"
+      :tab="selectedTab"
+      :connection="String(connection)"
+    />
   </template>
 </template>
 

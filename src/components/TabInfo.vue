@@ -15,8 +15,10 @@ const props = defineProps({
 
 const tab = ref(props.tab);
 
-const updateTab = (data) => {
-  tab.value = data;
+const tabEditComplete = (updatedTab) => {
+  tab.value.title = updatedTab.title;
+  tab.value.url = updatedTab.url;
+  tab.favIconUrl = updatedTab?.favIconUrl || "";
 };
 
 const setGenericIcon = (e) => {
@@ -42,7 +44,7 @@ const setGenericIcon = (e) => {
       </div>
     </v-col>
     <v-col :cols="12" :sm="12" :md="6">
-      <EditTab :tab="tab" :connection="connection" @onTabEdit="updateTab" />
+      <EditTab :tab="tab" :connection="connection" @onTabEditComplete="tabEditComplete" />
     </v-col>
     <v-col :cols="12" :sm="12" :md="6">
       <a :href="tab.url" target="_blank">
