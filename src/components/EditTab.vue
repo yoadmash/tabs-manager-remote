@@ -25,7 +25,7 @@ const tabData = ref({ ...props.tab, json: "" });
 watch(
   () => props.tab,
   (newV, oldV) => {
-    tabDate.value = { ...newV, json: "" };
+    tabData.value = { ...newV, json: "" };
 })
 
 const example = {
@@ -161,8 +161,8 @@ const clearError = (focused) => {
           <v-btn
             text="Close"
             @click="
-              isActive.value = false;
               tabData = { ...tab };
+              isActive.value = false;
             "
           />
           <v-btn text="Save" @click="updateTab" />
