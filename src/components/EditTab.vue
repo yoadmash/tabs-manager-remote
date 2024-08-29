@@ -162,7 +162,7 @@ const clearError = (focused) => {
             text="Close"
             @click="
                     isActive.value = false;
-                    editComplete = true;
+                    editComplete = false;
                    "
           />
           <v-btn text="Save" @click="updateTab" />
