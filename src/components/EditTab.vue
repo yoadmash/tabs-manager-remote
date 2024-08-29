@@ -161,9 +161,9 @@ const clearError = (focused) => {
           <v-btn
             text="Close"
             @click="
-                    isActive.value = false;
-                    editComplete = false;
-                   "
+              isActive.value = false;
+              tabData = { ...tab };
+            "
           />
           <v-btn text="Save" @click="updateTab" />
         </v-card-actions>
