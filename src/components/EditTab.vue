@@ -160,7 +160,10 @@ const clearError = (focused) => {
           <v-spacer></v-spacer>
           <v-btn
             text="Close"
-            @click="isActive.value = false;"
+            @click="
+                    isActive.value = false;
+                    editComplete = true;
+                   "
           />
           <v-btn text="Save" @click="updateTab" />
         </v-card-actions>
