@@ -15,7 +15,7 @@ const props = defineProps({
 
 const tab = ref(props.tab);
 watch(
-  () => props.tabs,
+  () => props.tab,
   (newV, oldV) => {
     tab.value = newV;
 })
