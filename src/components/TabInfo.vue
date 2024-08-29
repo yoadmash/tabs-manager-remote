@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import EditTab from "./EditTab.vue";
 
 const props = defineProps({
@@ -14,6 +14,11 @@ const props = defineProps({
 });
 
 const tab = ref(props.tab);
+watch(
+  () => props.tabs,
+  (newV, oldV) => {
+    tab.value = newV;
+})
 
 const tabEditComplete = (updatedTab) => {
   tab.value.title = updatedTab.title;
