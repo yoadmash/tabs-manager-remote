@@ -25,7 +25,7 @@ const tabData = ref({ ...props.tab, json: "" });
 watch(
   () => props.tab,
   (newV, oldV) => {
-    tabDate.value = { ...props.tab, json: "" };
+    tabDate.value = { ...newV, json: "" };
 })
 
 const example = {
