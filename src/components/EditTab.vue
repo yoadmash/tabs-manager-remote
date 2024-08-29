@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { editTab } from "./../api/firebase.js";
 
 const emit = defineEmits(["onTabEditComplete"]);
@@ -22,6 +22,11 @@ const validJSON = ref({
 const textAreaRows = ref(1);
 const editComplete = ref(false);
 const tabData = ref({ ...props.tab, json: "" });
+watch(
+  () => props.tab,
+  (newV, oldV) => {
+    tabDate.value = { ...props.tab, json: "" };
+})
 
 const example = {
   title: " ",
