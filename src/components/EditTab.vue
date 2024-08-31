@@ -26,7 +26,8 @@ watch(
   () => props.tab,
   (newV, oldV) => {
     tabData.value = { ...newV, json: "" };
-})
+  }
+);
 
 const example = {
   title: " ",
@@ -66,13 +67,14 @@ const updateTab = async () => {
     }
   }
 
-  const data = {
-    ...props.tab,
+  let { index, ...data } = props.tab;
+  data = {
+    ...data,
     title: tabData.value.title,
     url: tabData.value.url,
     favIconUrl: tabData.value.favIconUrl || "",
   };
-  
+
   try {
     const success = await editTab(props.connection, data);
     if (success) {

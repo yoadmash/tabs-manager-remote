@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, h, ref, watch } from "vue";
 
 const emit = defineEmits(["onSelectComplete", "onSelectorsChanges"]);
 const props = defineProps({
@@ -19,6 +19,10 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  test: {
+    type: [Object, null],
+    required: false,
+  },
 });
 
 const data_selected = ref({
@@ -26,6 +30,15 @@ const data_selected = ref({
   window: null,
   tab: null,
 });
+
+watch(
+  () => props.test,
+  (newV, oldV) => {
+    if (newV) {
+      data_selected.value.tab = newV;
+    }
+  }
+);
 
 const connection_input = ref(null);
 const windows_input = ref(null);
@@ -83,13 +96,25 @@ const selectWindow = () => {
   }
   data_selected.value.tab = null;
   tabs_list.value = computed(() => {
-    const windowObj = windows_list.value.value.find(
-      (window) => window.value === data_selected.value.window.value
+    const windowObj = windows_list?.value?.value.find(
+      (window) => window.value === data_selected?.value?.window?.value
     );
     const tabs_list_arr = [];
-    windowObj?.tabs.map((tab) => {
+    windowObj?.tabs.map((tab, index) => {
       if (tab?.url) {
-        tabs_list_arr.push(tab);
+        tabs_list_arr.push({
+          ...tab,
+          index,
+          props: {
+            prependIcon: h("img", {
+              src: tab.favIconUrl || '/generic_tab.svg',
+              style: "width: 20px; height: 20px;",
+              onError: (e) => {
+                e.target.src = "/generic_tab.svg"
+              }
+            }),
+          },
+        });
       }
     });
     return props.reverse_sort.tabs ? tabs_list_arr.reverse() : tabs_list_arr;
@@ -102,10 +127,6 @@ const selectWindow = () => {
 
 const selectComplete = (input) => {
   if (typeof data_selected.value.tab === "object") {
-    emit("onSelectComplete", {
-      tab: data_selected.value.tab,
-      connection: data_selected.value.connection.value,
-    });
     if (input === "tabs_input") {
       if (tabs_list.value.value.includes(data_selected.value.tab)) {
         tabs_input.value.blur();
@@ -115,6 +136,13 @@ const selectComplete = (input) => {
         free_search_input.value.blur();
       }
     }
+    emit("onSelectComplete", {
+      tab: data_selected.value.tab,
+      all_tabs: tabs_list.value.value?.length
+        ? tabs_list.value.value
+        : search_results.value,
+      connection: data_selected.value.connection.value,
+    });
   }
 };
 
@@ -139,12 +167,38 @@ const tabCleared = (input) => {
 
 const freeSearch = () => {
   if (free_search_input.value.modelValue.length > 0) {
-    search_results.value = all_tabs.value.filter((tab) =>
-      tab.title.toLowerCase().includes(free_search_input.value.modelValue.toLowerCase())
-    );
-    search_results.value.map((tab) => (tab.title = `${tab.windowId}: ${tab.title}`));
-    data_selected.value.tab = null;
+    search_results.value = [];
+    all_tabs.value.filter((tab) => {
+      if (
+        tab.title.toLowerCase().includes(free_search_input.value.modelValue.toLowerCase())
+      ) {
+        search_results.value.push({
+          ...tab,
+          editable: false,
+          title: `${tab.windowId}: ${tab.title}`,
+        });
+      }
+    });
+    if (search_results.value.length) {
+      search_results.value = search_results.value.map((tab, index) => ({
+        ...tab,
+        props: {
+          prependIcon: h("img", {
+            src: tab.favIconUrl || '/generic_tab.svg',
+            style: "width: 20px; height: 20px;",
+            onError: (e) => {
+                e.target.src = "/generic_tab.svg"
+              }
+          }),
+        },
+        index,
+      }));
+      search_results.value = props.reverse_sort.tabs
+        ? search_results.value.reverse()
+        : search_results.value;
+    }
   }
+  data_selected.value.tab = null;
 };
 
 const freeSearchBlur = (focused) => {
@@ -165,6 +219,7 @@ const freeSearchBlur = (focused) => {
     >
       <v-select
         v-if="!allow_connection_search"
+        variant="outlined"
         :loading="load"
         :disabled="load"
         clearable
@@ -182,6 +237,7 @@ const freeSearchBlur = (focused) => {
       />
       <v-combobox
         v-else
+        variant="outlined"
         :loading="load"
         :disabled="load"
         clearable
@@ -204,6 +260,7 @@ const freeSearchBlur = (focused) => {
     >
       <v-select
         v-if="!allow_window_search"
+        variant="outlined"
         clearable
         persistent-clear
         return-object
@@ -219,6 +276,7 @@ const freeSearchBlur = (focused) => {
       />
       <v-combobox
         v-else
+        variant="outlined"
         clearable
         persistent-clear
         label="Window"
@@ -237,6 +295,7 @@ const freeSearchBlur = (focused) => {
       :cols="12"
     >
       <v-combobox
+        variant="outlined"
         clearable
         persistent-clear
         :label="`Free Search ${
@@ -258,6 +317,7 @@ const freeSearchBlur = (focused) => {
     <v-col :cols="12" v-if="data_selected.window && tabs_list.value.length">
       <v-select
         v-if="!allow_tab_search"
+        variant="outlined"
         clearable
         persistent-clear
         return-object
@@ -273,6 +333,7 @@ const freeSearchBlur = (focused) => {
       />
       <v-combobox
         v-else
+        variant="outlined"
         clearable
         persistent-clear
         label="Tab"
@@ -289,7 +350,7 @@ const freeSearchBlur = (focused) => {
   </v-row>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .header {
   display: flex;
   gap: 25px;

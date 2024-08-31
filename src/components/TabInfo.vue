@@ -1,9 +1,14 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, h } from "vue";
 import EditTab from "./EditTab.vue";
 
+const emit = defineEmits(["onCurrentTabIndexChange"]);
 const props = defineProps({
-  tab: {
+  currentTabIndex: {
+    type: Number,
+    required: true,
+  },
+  all_tabs: {
     type: Object,
     required: true,
   },
@@ -13,12 +18,21 @@ const props = defineProps({
   },
 });
 
-const tab = ref(props.tab);
+const tab = ref(props.all_tabs[props.currentTabIndex]);
+const currentTabPaginationIndex = ref(props.currentTabIndex + 1);
 watch(
-  () => props.tab,
-  (newV, oldV) => {
-    tab.value = newV;
-})
+  () => props.currentTabIndex,
+  (newIndex, oldIndex) => {
+    tab.value = props.all_tabs[newIndex];
+    currentTabPaginationIndex.value = newIndex + 1;
+  }
+);
+
+const setCurrentTab = (index) => {
+  // currentTabPaginationIndex.value = index;
+  // tab.value = props.all_tabs[index - 1];
+  emit("onCurrentTabIndexChange", index - 1);
+};
 
 const tabEditComplete = (updatedTab) => {
   tab.value.title = updatedTab.title;
@@ -32,65 +46,52 @@ const setGenericIcon = (e) => {
 </script>
 
 <template>
-  <v-row>
+  <v-row style="margin: 0">
+    <v-col :cols="12" :sm="12" v-if="all_tabs.length > 1">
+      <v-pagination
+        rounded
+        size="small"
+        :length="all_tabs.length"
+        :total-visible="5"
+        :model-value="currentTabPaginationIndex"
+        @update:model-value="setCurrentTab"
+      />
+    </v-col>
     <v-col :cols="12">
-      <div class="tab-info">
-        <div>
-          <img
-            :src="tab?.favIconUrl || '/generic_tab.svg'"
-            alt="tab-favicon"
-            @error="setGenericIcon($event)"
-          />
-        </div>
-        <div>
-          <p :title="tab.title">{{ tab.title }}</p>
-        </div>
-        <p :title="tab.url">URL: {{ tab.url }}</p>
-      </div>
+      <v-card
+        class="mx-auto border border-dark"
+        tag="p"
+        :prepend-icon="
+          h('img', {
+            src: tab.favIconUrl || '/generic_tab.svg',
+            style: 'width: 25px; height: 25px;',
+            onError: (e) => setGenericIcon(e),
+          })
+        "
+        :subtitle="tab.url"
+        width="100%"
+      >
+        <v-card-text :title="tab.title" tag="p">{{ tab.title }}</v-card-text>
+      </v-card>
     </v-col>
-    <v-col :cols="12" :sm="12" :md="6">
-      <EditTab :tab="tab" :connection="connection" @onTabEditComplete="tabEditComplete" />
-    </v-col>
-    <v-col :cols="12" :sm="12" :md="6">
+    <v-col :cols="12" :sm="12" :md="tab?.editable !== false ? 6 : 12">
       <a :href="tab.url" target="_blank">
         <v-btn block variant="outlined" color="green">Open Tab</v-btn>
       </a>
+    </v-col>
+    <v-col :cols="12" :sm="12" :md="6" v-if="tab?.editable !== false">
+      <EditTab :tab="tab" :connection="connection" @onTabEditComplete="tabEditComplete" />
     </v-col>
   </v-row>
 </template>
 
 <style lang="scss" scoped>
-.tab-info {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  border-radius: 10px;
-  padding: 10px;
-  background-color: rgba(0, 128, 0, 0.1);
-
-  div {
-    width: 100%;
-    padding-bottom: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-bottom: 1px solid black;
-
-    img {
-      width: 20px;
-      height: 20px;
-    }
-  }
-
   p {
     cursor: default;
     word-break: break-all;
     white-space: wrap;
     overflow: hidden;
   }
-}
 
 a {
   text-decoration: none;

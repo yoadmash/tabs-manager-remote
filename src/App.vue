@@ -16,6 +16,7 @@ const show_password = ref(false);
 const docs = ref([]);
 const connections = ref([]);
 const selectedTab = ref(null);
+const all_tabs = ref(null);
 const connection = ref("");
 const reverse_sort = ref({});
 
@@ -37,8 +38,9 @@ const getData = async () => {
 };
 
 const selectComplete = (data) => {
-  selectedTab.value = data.tab;
-  connection.value = data.connection;
+  selectedTab.value = data?.tab?.index;
+  all_tabs.value = data?.all_tabs;
+  connection.value = data?.connection;
 };
 
 const selectorsChanges = () => {
@@ -71,6 +73,7 @@ const logout = async () => {
   <template v-if="!authorized">
     <form @submit.prevent="login" class="login">
       <v-text-field
+        variant="outlined"
         label="Password"
         v-model="password"
         :type="!show_password ? 'password' : 'text'"
@@ -139,15 +142,18 @@ const logout = async () => {
       :connections="connections"
       :docs="docs"
       :reverse_sort="reverse_sort || {}"
+      :test="all_tabs !== null ? all_tabs[selectedTab] : null"
       @onSelectComplete="selectComplete"
       @onSelectorsChanges="selectorsChanges"
     />
-
     <TabInfo
-      v-if="selectedTab"
-      :tab="selectedTab"
+      v-if="selectedTab !== null"
+      :currentTabIndex="selectedTab"
+      :all_tabs="all_tabs"
       :connection="String(connection)"
+      @onCurrentTabIndexChange="selectedTab = $event"
     />
+    <div></div>
   </template>
 </template>
 
