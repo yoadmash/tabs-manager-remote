@@ -29,8 +29,6 @@ watch(
 );
 
 const setCurrentTab = (index) => {
-  // currentTabPaginationIndex.value = index;
-  // tab.value = props.all_tabs[index - 1];
   emit("onCurrentTabIndexChange", index - 1);
 };
 
