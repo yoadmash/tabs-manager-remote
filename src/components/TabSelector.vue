@@ -107,11 +107,11 @@ const selectWindow = () => {
           index,
           props: {
             prependIcon: h("img", {
-              src: tab.favIconUrl || '/generic_tab.svg',
+              src: tab.favIconUrl || "/generic_tab.svg",
               style: "width: 20px; height: 20px;",
               onError: (e) => {
-                e.target.src = "/generic_tab.svg"
-              }
+                e.target.src = "/generic_tab.svg";
+              },
             }),
           },
         });
@@ -184,18 +184,15 @@ const freeSearch = () => {
         ...tab,
         props: {
           prependIcon: h("img", {
-            src: tab.favIconUrl || '/generic_tab.svg',
+            src: tab.favIconUrl || "/generic_tab.svg",
             style: "width: 20px; height: 20px;",
             onError: (e) => {
-                e.target.src = "/generic_tab.svg"
-              }
+              e.target.src = "/generic_tab.svg";
+            },
           }),
         },
         index,
       }));
-      search_results.value = props.reverse_sort.tabs
-        ? search_results.value.reverse()
-        : search_results.value;
     }
   }
   data_selected.value.tab = null;
