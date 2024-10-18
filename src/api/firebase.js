@@ -21,7 +21,7 @@ export const connectToFirebase = () => {
 export const getDataFromFirebase = async () => {
     const connections_ids =
         DEV_MODE
-            ? await (await fetch(`${DEV_MODE_SERVER_IP}/connections`)).json()
+            ? (await (await fetch(`${DEV_MODE_SERVER_IP}`)).json()).connections
             : await getDocs(collection(firebaseDB, "connections_list"));
 
     const remote_settings =
@@ -32,7 +32,7 @@ export const getDataFromFirebase = async () => {
     const connections = [];
     const connections_ids_docs = [];
     const remote_settings_docs = {};
-
+    
     connections_ids.docs.forEach((doc) => {
         if (DEV_MODE || getRoleLevel() === "admin" || !doc.data().hidden) {
             connections_ids_docs.push(new Promise(async (resolve, reject) => {
@@ -46,7 +46,7 @@ export const getDataFromFirebase = async () => {
 
                 const collection_data =
                     DEV_MODE
-                        ? await (await fetch(`${DEV_MODE_SERVER_IP}/${doc.id}`)).json()
+                        ? (await (await fetch(`${DEV_MODE_SERVER_IP}`)).json())[`${doc.id}`]
                         : await getDocs(collection(firebaseDB, doc.id));
 
                 const collection_data_obj = {
@@ -115,9 +115,9 @@ export const authenticate = async (typedPassword) => {
         setRoleLevel(auth_level);
         return auth_level !== null;
     } else {
-        const res = await fetch(`${DEV_MODE_SERVER_IP}/auth`);
+        const res = await fetch(`${DEV_MODE_SERVER_IP}`);
         const data = await res.json();
-        const password = data.password.value;
+        const password = data.auth.password.value;
         return password === typedPassword;
     }
 }
