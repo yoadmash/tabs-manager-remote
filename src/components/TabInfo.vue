@@ -1,6 +1,10 @@
 <script setup>
-import { ref, watch, h } from "vue";
+import { ref, watch, h, onMounted, onUnmounted } from "vue";
 import EditTab from "./EditTab.vue";
+
+let initX = null;
+let initY = null;
+let card = null;
 
 const emit = defineEmits(["onCurrentTabIndexChange"]);
 const props = defineProps({
@@ -18,6 +22,12 @@ const props = defineProps({
   },
 });
 
+onMounted(() => {
+  card = document.querySelector(".tabInfo");
+  card.addEventListener("touchstart", touchStart, false);
+  card.addEventListener("touchmove", touchMove, false);
+});
+
 const tab = ref(props.all_tabs[props.currentTabIndex]);
 const currentTabPaginationIndex = ref(props.currentTabIndex + 1);
 watch(
@@ -27,6 +37,43 @@ watch(
     currentTabPaginationIndex.value = newIndex + 1;
   }
 );
+
+const touchStart = (e) => {
+  initX = e.touches[0].clientX;
+  initY = e.touches[0].clientY;
+};
+
+const touchMove = (e) => {
+  e.preventDefault();
+  if (initX === null) {
+    return;
+  }
+
+  if (initY === null) {
+    return;
+  }
+
+  var currX = e.touches[0].clientX;
+  var currY = e.touches[0].clientY;
+
+  var diffX = initX - currX;
+  var diffY = initY - currY;
+
+  if (Math.abs(diffX) > Math.abs(diffY)) {
+    const prevIndex = currentTabPaginationIndex.value - 1;
+    const nextIndex = currentTabPaginationIndex.value + 1;
+    if (diffX > 0) {
+      // swipe left
+      setCurrentTab(prevIndex > 0 ? prevIndex : props.all_tabs.length);
+    } else {
+      // swipe right
+      setCurrentTab(nextIndex <= props.all_tabs.length ? nextIndex : 1);
+    }
+  }
+
+  initX = null;
+  initY = null;
+};
 
 const setCurrentTab = (index) => {
   emit("onCurrentTabIndexChange", index - 1);
@@ -57,11 +104,11 @@ const setGenericIcon = (e) => {
     </v-col>
     <v-col :cols="12">
       <v-card
-        class="mx-auto border border-dark"
+        class="tabInfo mx-auto border border-dark"
         tag="p"
         :prepend-icon="
           h('img', {
-            src: tab.favIconUrl || '/generic_tab.svg',
+            src: tab?.favIconUrl || '/generic_tab.svg',
             style: 'width: 25px; height: 25px;',
             onError: (e) => setGenericIcon(e),
           })
@@ -84,12 +131,12 @@ const setGenericIcon = (e) => {
 </template>
 
 <style lang="scss" scoped>
-  p {
-    cursor: default;
-    word-break: break-all;
-    white-space: wrap;
-    overflow: hidden;
-  }
+p {
+  cursor: default;
+  word-break: break-all;
+  white-space: wrap;
+  overflow: hidden;
+}
 
 a {
   text-decoration: none;
