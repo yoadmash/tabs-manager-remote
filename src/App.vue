@@ -1,106 +1,67 @@
 <script setup>
-import { initializeApp } from "firebase/app";
-import { getFirestore, getDocs, collection, getDoc, doc } from "firebase/firestore";
-import SimpleCrypto from "simple-crypto-js";
+import {
+  connectToFirebase,
+  getDataFromFirebase,
+  sort,
+  authenticate,
+} from "./api/firebase.js";
 
 import { onMounted, ref } from "vue";
 import TabSelector from "./components/TabSelector.vue";
 import TabInfo from "./components/TabInfo.vue";
 
-let firebaseConfig = null;
-let firebaseDB = null;
-
 const authorized = ref(false);
-const auth_level = ref("");
 const password = ref("");
 const show_password = ref(false);
 const docs = ref([]);
 const connections = ref([]);
 const selectedTab = ref(null);
+const all_tabs = ref(null);
+const connection = ref("");
+const reverse_sort = ref({});
 
-onMounted(() => {
+onMounted(async () => {
+  if (import.meta.env?.VITE_APP_DEV_MODE !== "true") {
+    connectToFirebase();
+  }
   authorized.value = Boolean(localStorage.getItem("auth")) || false;
-  auth_level.value = localStorage.getItem("auth_level") || null;
-  firebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG);
-  const app = initializeApp(firebaseConfig);
-  firebaseDB = getFirestore(app);
   if (authorized.value) {
-    getDocsFromFirebase();
+    await getData();
   }
 });
 
-const verifyPassword = async (typedPassword) => {
-  const currentPasswords = await getDoc(doc(firebaseDB, "auth", "passwords"));
-  const auth_level =
-    typedPassword === currentPasswords.data().admin
-      ? "admin"
-      : typedPassword === currentPasswords.data().user
-      ? "user"
-      : null;
-  return auth_level;
-};
-
-const getDocsFromFirebase = async () => {
-  const connections_ids = await getDocs(collection(firebaseDB, "connections_list"));
-  connections_ids.docs.forEach(async (doc) => {
-    if (getRoleLevel() === "admin" || !doc.data().hidden) {
-      connections.value.push({
-        title: `${doc.data().name} - [${doc.data().saved_windows_count} saved windows]`,
-        value: doc.id,
-      });
-      const collection_data = await getDocs(collection(firebaseDB, doc.id));
-      const collection_data_obj = {
-        id: doc.id,
-        data: collection_data.docs.map((doc) => doc.data()),
-      };
-      docs.value.push(collection_data_obj);
-    }
-  });
+const getData = async () => {
+  const firebaseData = await getDataFromFirebase();
+  docs.value = firebaseData?.docs;
+  connections.value = firebaseData?.connections;
+  reverse_sort.value = firebaseData?.remote_settings?.reverse_sort;
 };
 
 const selectComplete = (data) => {
-  selectedTab.value = data;
+  selectedTab.value = data?.tab?.index;
+  all_tabs.value = data?.all_tabs;
+  connection.value = data?.connection;
 };
 
 const selectorsChanges = () => {
   selectedTab.value = null;
 };
 
-const setRoleLevel = (auth_level) => {
-  const secretKey = import.meta.env.VITE_ENCR_SECRET_KEY;
-  const simpleCrypto = new SimpleCrypto(secretKey);
-  const cipherText = simpleCrypto.encrypt(auth_level);
-  localStorage.setItem("auth_level", cipherText);
-};
-
-const getRoleLevel = () => {
-  const secretKey = import.meta.env.VITE_ENCR_SECRET_KEY;
-  const simpleCrypto = new SimpleCrypto(secretKey);
-  const decipherText = simpleCrypto.decrypt(localStorage.getItem("auth_level"));
-  return decipherText;
-};
-
 const login = async () => {
   if (password.value.length) {
-    const res = await verifyPassword(password.value);
+    const res = await authenticate(password.value);
     if (res) {
       password.value = "";
-
-      auth_level.value = res;
-      setRoleLevel(auth_level.value);
-
+      show_password.value = false;
       authorized.value = true;
       localStorage.setItem("auth", Number(authorized.value));
-
-      show_password.value = false;
-      getDocsFromFirebase();
+      await getData();
     }
   }
 };
 
 const logout = async () => {
   authorized.value = false;
-  auth_level.value = null;
   selectedTab.value = null;
   connections.value = [];
   localStorage.removeItem("auth");
@@ -109,12 +70,13 @@ const logout = async () => {
 </script>
 
 <template>
-  <template v-if="!authorized && !auth_level">
+  <template v-if="!authorized">
     <form @submit.prevent="login" class="login">
       <v-text-field
-        :type="!show_password ? 'password' : 'text'"
+        variant="outlined"
         label="Password"
         v-model="password"
+        :type="!show_password ? 'password' : 'text'"
         :append-inner-icon="!show_password ? 'mdi-eye' : 'mdi-eye-off'"
         @click:append-inner="show_password = !show_password"
       />
@@ -124,18 +86,74 @@ const logout = async () => {
   <template v-else>
     <div class="title">
       <h3>Tabs Manager - Remote Access</h3>
-      <v-btn @click="logout" color="success" variant="outlined" size="small"
-        >Logout</v-btn
-      >
+      <v-menu transition="slide-y-transition">
+        <template v-slot:activator="{ props }">
+          <v-btn color="success" variant="outlined" size="small" v-bind="props">
+            Menu
+          </v-btn>
+        </template>
+        <v-list style="padding: 0">
+          <v-list-item v-if="reverse_sort && Object.keys(reverse_sort).includes('tabs')">
+            <v-btn
+              color="black"
+              variant="plain"
+              size="small"
+              slim
+              :prepend-icon="
+                reverse_sort?.tabs ? 'mdi-sort-ascending' : 'mdi-sort-descending'
+              "
+              :text="reverse_sort?.tabs ? 'Normal tabs list' : 'Reverse tabs list'"
+              @click="sort(reverse_sort, 'tabs', !reverse_sort?.tabs)"
+            />
+          </v-list-item>
+          <v-list-item
+            v-if="reverse_sort && Object.keys(reverse_sort).includes('windows')"
+          >
+            <v-btn
+              color="black"
+              variant="plain"
+              size="small"
+              slim
+              :prepend-icon="
+                reverse_sort?.windows ? 'mdi-sort-ascending' : 'mdi-sort-descending'
+              "
+              :text="
+                reverse_sort?.windows ? 'Normal windows list' : 'Reverse windows list'
+              "
+              @click="sort(reverse_sort, 'windows', !reverse_sort?.windows)"
+            />
+          </v-list-item>
+          <v-list-item>
+            <v-btn
+              color="black"
+              variant="plain"
+              size="small"
+              slim
+              prepend-icon="mdi-logout"
+              @click="logout"
+              text="Logout"
+            />
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </div>
     <TabSelector
+      :load="connections.length === 0"
       :connections="connections"
       :docs="docs"
+      :reverse_sort="reverse_sort || {}"
+      :test="all_tabs !== null ? all_tabs[selectedTab] : null"
       @onSelectComplete="selectComplete"
       @onSelectorsChanges="selectorsChanges"
     />
-
-    <TabInfo :tab="selectedTab" v-if="selectedTab" />
+    <TabInfo
+      v-if="selectedTab !== null"
+      :currentTabIndex="selectedTab"
+      :all_tabs="all_tabs"
+      :connection="String(connection)"
+      @onCurrentTabIndexChange="selectedTab = $event"
+    />
+    <div></div>
   </template>
 </template>
 
