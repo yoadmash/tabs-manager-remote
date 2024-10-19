@@ -44,6 +44,12 @@ const connection_input = ref(null);
 const windows_input = ref(null);
 const free_search_input = ref(null);
 const tabs_input = ref(null);
+const search_by = ref(0);
+
+const search_by_items = [
+  { value: 0, title: "Title" },
+  { value: 1, title: "URL" },
+];
 
 const windows_list = ref([]);
 const tabs_list = ref([]);
@@ -136,13 +142,15 @@ const selectComplete = (input) => {
         free_search_input.value.blur();
       }
     }
-    emit("onSelectComplete", {
-      tab: data_selected.value.tab,
-      all_tabs: tabs_list.value.value?.length
-        ? tabs_list.value.value
-        : search_results.value,
-      connection: data_selected.value.connection.value,
-    });
+    if (data_selected.value.tab) {
+      emit("onSelectComplete", {
+        tab: data_selected.value.tab,
+        all_tabs: tabs_list.value.value?.length
+          ? tabs_list.value.value
+          : search_results.value,
+        connection: data_selected.value.connection.value,
+      });
+    }
   }
 };
 
@@ -169,8 +177,11 @@ const freeSearch = () => {
   if (free_search_input.value.modelValue.length > 0) {
     search_results.value = [];
     all_tabs.value.filter((tab) => {
+      const searchTarget = search_by.value === 0 ? tab.title : tab.url;
       if (
-        tab.title.toLowerCase().includes(free_search_input.value.modelValue.toLowerCase())
+        searchTarget
+          .toLowerCase()
+          .includes(free_search_input.value.modelValue.toLowerCase())
       ) {
         search_results.value.push({
           ...tab,
@@ -290,8 +301,24 @@ const freeSearchBlur = (focused) => {
     <v-col
       v-if="!data_selected.window && data_selected.connection && all_tabs.length"
       :cols="12"
+      :md="2"
+    >
+      <v-select
+        variant="outlined"
+        clearable
+        persistent-clear
+        label="Search by"
+        v-model="search_by"
+        :items="search_by_items"
+      />
+    </v-col>
+    <v-col
+      v-if="!data_selected.window && data_selected.connection && all_tabs.length"
+      :cols="12"
+      :md="10"
     >
       <v-combobox
+        :disabled="search_by === null"
         variant="outlined"
         clearable
         persistent-clear

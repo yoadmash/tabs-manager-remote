@@ -23,7 +23,7 @@ const props = defineProps({
 });
 
 onMounted(() => {
-  card = document.querySelector(".tabInfo");
+  card = document.querySelector(".tabInfoCard");
   card.addEventListener("touchstart", touchStart, false);
   card.addEventListener("touchmove", touchMove, false);
 });
@@ -76,23 +76,23 @@ const touchMove = (e) => {
 const swipeLeft = (index) => {
   card.animate(
     [
-      { transform: 'translateX(100%)', opacity: 0 },
-      { transform: 'translateX(0)', opacity: 1 }
+      { left: "75%", opacity: 0 },
+      { left: 0, opacity: 1 },
     ],
     {
       duration: 350,
-      easing: 'ease-in-out',
-      fill: 'forwards'
+      easing: "ease-in-out",
+      fill: "forwards",
     }
   );
   setCurrentTab(index <= props.all_tabs.length ? index : 1);
-}
+};
 
 const swipeRight = (index) => {
   card.animate(
     [
-      { transform: 'translateX(-100%)', opacity: 0 },
-      { transform: 'translateX(0)', opacity: 1 }
+      { left: "-75%", opacity: 0 },
+      { left: 0, opacity: 1 },
     ],
     {
       duration: 350,
@@ -101,7 +101,7 @@ const swipeRight = (index) => {
     }
   );
   setCurrentTab(index > 0 ? index : props.all_tabs.length);
-}
+};
 
 const setCurrentTab = (index) => {
   emit("onCurrentTabIndexChange", index - 1);
@@ -131,21 +131,22 @@ const setGenericIcon = (e) => {
       />
     </v-col>
     <v-col :cols="12">
-      <v-card
-        class="mx-auto border border-dark tabInfo"
-        tag="p"
-        :prepend-icon="
-          h('img', {
-            src: tab?.favIconUrl || '/generic_tab.svg',
-            style: 'width: 25px; height: 25px;',
-            onError: (e) => setGenericIcon(e),
-          })
-        "
-        :subtitle="tab.url"
-        width="100%"
-      >
-        <v-card-text :title="tab.title" tag="p">{{ tab.title }}</v-card-text>
-      </v-card>
+      <div class="tabInfo">
+        <v-card
+          class="mx-auto border border-dark tabInfoCard"
+          :prepend-icon="
+            h('img', {
+              src: tab?.favIconUrl || '/generic_tab.svg',
+              style: 'width: 25px; height: 25px;',
+              onError: (e) => setGenericIcon(e),
+            })
+          "
+          :subtitle="tab.url"
+          width="100%"
+        >
+          <v-card-text :title="tab.title" tag="p">{{ tab.title }}</v-card-text>
+        </v-card>
+      </div>
     </v-col>
     <v-col :cols="12" :sm="12" :md="tab?.editable !== false ? 6 : 12">
       <a :href="tab.url" target="_blank">
@@ -168,5 +169,9 @@ p {
 
 a {
   text-decoration: none;
+}
+
+.tabInfo {
+  overflow: hidden;
 }
 </style>

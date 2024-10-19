@@ -160,7 +160,7 @@ const logout = async () => {
 <style lang="scss">
 body {
   margin: 10px;
-  height: 95vh;
+  height: 100%;
   display: flex;
   justify-content: center;
 
@@ -168,7 +168,7 @@ body {
     width: 75vw;
 
     @media only screen and (max-width: 1264px) {
-      width: 95vw;
+      width: 99%;
     }
 
     .title {
