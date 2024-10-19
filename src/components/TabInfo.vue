@@ -63,17 +63,45 @@ const touchMove = (e) => {
     const prevIndex = currentTabPaginationIndex.value - 1;
     const nextIndex = currentTabPaginationIndex.value + 1;
     if (diffX > 0) {
-      // swipe left
-      setCurrentTab(prevIndex > 0 ? prevIndex : props.all_tabs.length);
+      swipeLeft(nextIndex);
     } else {
-      // swipe right
-      setCurrentTab(nextIndex <= props.all_tabs.length ? nextIndex : 1);
+      swipeRight(prevIndex);
     }
   }
 
   initX = null;
   initY = null;
 };
+
+const swipeLeft = (index) => {
+  card.animate(
+    [
+      { transform: 'translateX(100%)', opacity: 0 },
+      { transform: 'translateX(0)', opacity: 1 }
+    ],
+    {
+      duration: 350,
+      easing: 'ease-in-out',
+      fill: 'forwards'
+    }
+  );
+  setCurrentTab(index <= props.all_tabs.length ? index : 1);
+}
+
+const swipeRight = (index) => {
+  card.animate(
+    [
+      { transform: 'translateX(-100%)', opacity: 0 },
+      { transform: 'translateX(0)', opacity: 1 }
+    ],
+    {
+      duration: 350,
+      easing: 'ease-in-out',
+      fill: 'forwards'
+    }
+  );
+  setCurrentTab(index > 0 ? index : props.all_tabs.length);
+}
 
 const setCurrentTab = (index) => {
   emit("onCurrentTabIndexChange", index - 1);
@@ -104,7 +132,7 @@ const setGenericIcon = (e) => {
     </v-col>
     <v-col :cols="12">
       <v-card
-        class="tabInfo mx-auto border border-dark"
+        class="mx-auto border border-dark tabInfo"
         tag="p"
         :prepend-icon="
           h('img', {
