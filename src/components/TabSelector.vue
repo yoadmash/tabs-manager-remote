@@ -217,6 +217,12 @@ const freeSearchBlur = (focused) => {
     emit("onSelectorsChanges");
   }
 };
+
+const openAllTabs = () => {
+  tabs_list.value.value.forEach(tab => {
+    window.open(tab.url, "_blank");
+  })
+}
 </script>
 
 <template>
@@ -370,6 +376,9 @@ const freeSearchBlur = (focused) => {
         @click:clear="tabCleared('tabs_input')"
         @update:model-value="selectComplete('tabs_input')"
       />
+    </v-col>
+    <v-col :cols="12" v-if="data_selected.window && tabs_list.value.length && !data_selected.tab">
+      <v-btn block variant="outlined" color="green" @click="openAllTabs()">Open All Tabs</v-btn>
     </v-col>
   </v-row>
 </template>
