@@ -67,7 +67,7 @@ const updateTab = async () => {
     }
   }
 
-  let { index, ...data } = props.tab;
+  let { index, props: p, ...data } = props.tab;
   data = {
     ...data,
     title: tabData.value.title,

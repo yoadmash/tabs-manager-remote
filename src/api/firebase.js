@@ -32,9 +32,13 @@ export const getDataFromFirebase = async () => {
     const connections = [];
     const connections_ids_docs = [];
     const remote_settings_docs = {};
-    
+
     connections_ids.docs.forEach((doc) => {
-        if (DEV_MODE || getRoleLevel() === "admin" || !doc.data().hidden) {
+        if (
+            DEV_MODE ||
+            getRoleLevel() === "admin" ||
+            (getRoleLevel() && !doc.data().hidden)
+        ) {
             connections_ids_docs.push(new Promise(async (resolve, reject) => {
                 const doc_name = DEV_MODE ? doc.name : doc.data().name;
                 const saved_windows_count = DEV_MODE ? doc.saved_windows_count : doc.data().saved_windows_count;
@@ -83,6 +87,11 @@ export const sort = async (reverse_sort_obj, sort_type, new_setting) => {
 };
 
 export const editTab = async (connection, data) => {
+    if (DEV_MODE) {
+        console.log(data);
+        return true;
+    }
+
     return new Promise(async (resolve, reject) => {
         try {
             const windowDocRef = doc(firebaseDB, connection, String(data.windowId));
@@ -90,7 +99,6 @@ export const editTab = async (connection, data) => {
             const tabToEditIndex = window?.tabs?.findIndex(tab => tab.id === data.id);
             let tabToEdit = window?.tabs?.find(tab => tab.id === data.id);
             tabToEdit = { ...data }
-            delete tabToEdit.props;
 
             window.tabs[tabToEditIndex] = tabToEdit;
 
@@ -129,6 +137,9 @@ const setRoleLevel = (auth_level) => {
 };
 
 const getRoleLevel = () => {
-    const decipherText = simpleCrypto.decrypt(localStorage.getItem("auth_level"));
+    const encryptedAuthLevel = localStorage.getItem("auth_level");
+    if (!encryptedAuthLevel) return null;
+    
+    const decipherText = simpleCrypto.decrypt(encryptedAuthLevel);
     return decipherText;
 };
