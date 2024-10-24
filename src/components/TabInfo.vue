@@ -44,7 +44,6 @@ const touchStart = (e) => {
 };
 
 const touchMove = (e) => {
-  e.preventDefault();
   if (initX === null) {
     return;
   }
@@ -60,6 +59,7 @@ const touchMove = (e) => {
   var diffY = initY - currY;
 
   if (Math.abs(diffX) > Math.abs(diffY)) {
+    e.preventDefault();
     const prevIndex = currentTabPaginationIndex.value - 1;
     const nextIndex = currentTabPaginationIndex.value + 1;
     if (diffX > 0) {
