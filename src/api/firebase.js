@@ -90,6 +90,7 @@ export const editTab = async (connection, data) => {
             const tabToEditIndex = window?.tabs?.findIndex(tab => tab.id === data.id);
             let tabToEdit = window?.tabs?.find(tab => tab.id === data.id);
             tabToEdit = { ...data }
+            delete tabToEdit.props;
 
             window.tabs[tabToEditIndex] = tabToEdit;
 
